@@ -55,6 +55,16 @@ systemctl --user stop nanoclaw
 systemctl --user restart nanoclaw
 ```
 
+# Added via Customizations (not part of standard Nanoclaw)
+
+## Adding Agents
+- agents can now be added to the container by copying them into containers/agents/
+- these get copied then mapped to ~/.claude/agents/ in the container, along with skills
+
+## Your Initial Startup:
+1. Load skills from ~/.claude/skills/
+2. Load agents from ~/.claude/agents/
+
 ## Troubleshooting
 
 **WhatsApp not connecting after upgrade:** WhatsApp is now a separate channel fork, not bundled in core. Run `/add-whatsapp` (or `git remote add whatsapp https://github.com/qwibitai/nanoclaw-whatsapp.git && git fetch whatsapp main && (git merge whatsapp/main || { git checkout --theirs package-lock.json && git add package-lock.json && git merge --continue; }) && npm run build`) to install it. Existing auth credentials and groups are preserved.
