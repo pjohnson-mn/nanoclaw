@@ -164,11 +164,25 @@ function buildVolumeMounts(
   if (fs.existsSync(agentsSrc)) {
     fs.mkdirSync(agentsDst, { recursive: true });
     for (const entry of fs.readdirSync(agentsSrc)) {
+      
       const srcEntry = path.join(agentsSrc, entry);
       const dstEntry = path.join(agentsDst, entry);
       fs.cpSync(srcEntry, dstEntry, { recursive: true });
     }
   }
+
+  // Sync agents from container/agents/ into each group's .claude/context/
+  const contextSrc = path.join(process.cwd(), 'container', 'context');
+  const contextDst = path.join(groupSessionsDir, 'context');
+  if (fs.existsSync(contextSrc)) {
+    fs.mkdirSync(contextDst, { recursive: true });
+    for (const entry of fs.readdirSync(contextSrc)) {
+      const srcEntry = path.join(contextSrc, entry);
+      const dstEntry = path.join(contextDst, entry);
+      fs.cpSync(srcEntry, dstEntry, { recursive: true });
+    }
+  }
+
   mounts.push({
     hostPath: groupSessionsDir,
     containerPath: '/home/node/.claude',
