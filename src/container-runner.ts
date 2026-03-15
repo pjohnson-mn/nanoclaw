@@ -171,7 +171,7 @@ function buildVolumeMounts(
     }
   }
 
-  // Sync agents from container/agents/ into each group's .claude/context/
+  // Sync context from container/context/ into each group's .claude/context/
   const contextSrc = path.join(process.cwd(), 'container', 'context');
   const contextDst = path.join(groupSessionsDir, 'context');
   if (fs.existsSync(contextSrc)) {
