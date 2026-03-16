@@ -62,7 +62,7 @@ After modifying any file in the vault:
 | `meetings/`       | Meeting notes (`YYYY-MM-DD <Title>.md`)            |
 | `Daily Notes/`    | Daily journal notes (`YYYY-MM-DD.md`) of what I did that day at work              |
 | `@people/`        | Contact/person notes (prefixed `@Name.md`)         |
-| `PKB/`            | Personal Knowledge Base — reference notes, how-tos |
+| `PKB`				| Personal knowledge base; terms, definitions, process explanations go here, heavy use of linking |
 | `_templates/`     | Templater templates for all note types             |
 | `_scripts/`       | QuickAdd JavaScript user scripts                   |
 | `_lookups/`       | Lookup/enum files (e.g., `%noteType.md`)           |
@@ -71,20 +71,30 @@ After modifying any file in the vault:
 | `experiments/`    | Exploratory/scratch work                           |
 
 
-# Project System ("Irons in the Fire")
+# TaskNotes
+As yu'll see, the TaskNotes plugin is used in this vault.  This allows the use of an entire note to represent a task or todo.  These notes always live in the `TaskNotes` folder.
 
-Projects live under `IronsInTheFire/` with names prefixed by `!` (e.g., `!My Project`). Each project folder contains:
+## Subfolders
+`TaskNotes/Tasks` -- this is where the tasks go, of any kind, whether a normal task, project entry, etc.
+`TaskNotes/Updates` -- these are normal notes that represent updates on a TaskNotes task.  The 'scan-email-for-project-updates' agent will create these notes in addition to the user.
+`TaskNotes/views` -- these are Obsidian Bases that provide different views of the TaskNotes in the vault.
 
-- `!ProjectName.md` — main project note with description, milestones, and embedded Bases views
-- `_BOARD.md` — Kanban board (On Deck / In Progress / Complete)
-- `ProjectName.base` — Obsidian Bases file with `updates` and `blockers` table views
-- `updates/` — timestamped update notes (`YYYY-MM-DD HHMM AM/PM - Title.md`)
-- `blockers/` — blocker notes
-- `notes/` — miscellaneous project notes
+## Frontmatter
 
-`IronsInTheFire/_MASTER.md` is the top-level Kanban board linking all active projects.
+### TaskNotes/Updates
+These notes have the following frontmatter fields and values:
+- `type`: "update" -- type of update.
+- `email_link`: an http link to an email if that is the source of the update.
+- `related_project`: a local wiki link to the TaskNote representing the project this update pertains to.
 
-New projects are created via the **"Add an Iron to the Fire"** QuickAdd macro, which runs `_scripts/createNewProject.js`.
+##  TaskNotes/Tasks
+Default fields from the plugin:
+- title, status, priority, scheduled (when I plan to do the task), dateCreated, dateModified, tags
+
+Aside from the default frontmatter fields from the TaskNotes plugin, I have these custom fields:
+- `assignedTo`: people/person running with the task, and is a local wiki link to their name note in my `@people/` folder.
+- `stakeholders`: people who we are doing the task for, the sponsors of the project, etc.  These are also local wiki links to their name note in the `@people/` folder. 
+
 
 # Note Frontmatter Conventions
 
@@ -93,7 +103,6 @@ All notes use YAML frontmatter. Key properties:
 - `type`: `meeting` | `learning` | `1-1` | `project` | `project-update` | `daily`
 - `createDate`: `YYYY-MM-DD`
 - `people`: wikilinks to `@people/` entries
-- `related_project`: wikilink to project note
 
 # Key Scripts (`_scripts/`)
 
@@ -116,6 +125,7 @@ All notes use YAML frontmatter. Key properties:
 
 - **Templater** — template engine (uses `<% ... %>` syntax)
 - **QuickAdd** — macro runner and capture prompts
+- **TaskNotes** -- using a note to represent tasks, this is my primary way of tracking todos and projects
 - **Dataview** — SQL-like queries over note metadata
 - **Obsidian Kanban** — Kanban boards rendered from specially formatted markdown
 - **Obsidian Bases** — database-style views from `.base` files

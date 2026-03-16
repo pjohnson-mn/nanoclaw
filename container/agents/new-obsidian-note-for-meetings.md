@@ -43,6 +43,7 @@ related_project:
 - `type`: always `meeting` (or `1-1` for 1-on-1 notes)
 - `createDate`: today's date in `YYYY-MM-DD` format
 - `people`: wikilinks in the format `[[@PersonName]]` for attendees found in `@people/`. For attendees NOT found in `@people/`, add their names to an **Other Attendees** section in the note body instead.
+- `related_project`: interpret the meeting title, body, and invititation list; if there is enough similarity to a project in `TaskNotes/Tasks` with the #task and #project tags, insert a local wiki link here to that project TaskNote.
 
 ### Note Body Structure
 
@@ -116,7 +117,8 @@ Before creating any note:
    b. Determine if it's a 1-on-1 meeting.
    c. Resolve attendees against `@people/`.
    d. Format the invite body.
-   e. Write the note to the correct location.
+   e. If not a 1-1 meeting, see if the meeting has a related project and link to it if so.
+   f. Write the note to the correct location.
 5. Report a summary: how many notes were created, which were skipped (duplicates), and any errors encountered.
 
 ## Error Handling
