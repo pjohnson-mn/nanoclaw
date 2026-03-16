@@ -53,17 +53,6 @@ launchctl kickstart -k gui/$(id -u)/com.nanoclaw  # restart
 systemctl --user start nanoclaw
 systemctl --user stop nanoclaw
 systemctl --user restart nanoclaw
-```
-
-# Added via Customizations (not part of standard Nanoclaw)
-
-## Adding Agents
-- agents can now be added to the container by copying them into containers/agents/
-- these get copied then mapped to ~/.claude/agents/ in the container, along with skills
-
-## Your Initial Startup:
-1. Load skills from ~/.claude/skills/
-2. Load agents from ~/.claude/agents/
 
 ---
 

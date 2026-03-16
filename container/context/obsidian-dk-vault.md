@@ -87,7 +87,7 @@ These notes have the following frontmatter fields and values:
 - `email_link`: an http link to an email if that is the source of the update.
 - `related_project`: a local wiki link to the TaskNote representing the project this update pertains to.
 
-##  TaskNotes/Tasks
+## TaskNotes/Tasks
 Default fields from the plugin:
 - title, status, priority, scheduled (when I plan to do the task), dateCreated, dateModified, tags
 
