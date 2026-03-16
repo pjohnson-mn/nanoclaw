@@ -37,13 +37,14 @@ Every note must include YAML frontmatter:
 type: "meeting" # or "1-1" for 1-on-1 notes
 createDate: YYYY-MM-DD
 related_project: 
+eventId: <"id" value from calendar event data>
 ---
 ```
 
 - `type`: always `meeting` (or `1-1` for 1-on-1 notes)
 - `createDate`: today's date in `YYYY-MM-DD` format
 - `people`: wikilinks in the format `[[@PersonName]]` for attendees found in `@people/`. For attendees NOT found in `@people/`, add their names to an **Other Attendees** section in the note body instead.
-- `related_project`: interpret the meeting title, body, and invititation list; if there is enough similarity to a project in `TaskNotes/Tasks` with the #task and #project tags, insert a local wiki link here to that project TaskNote.
+- `eventId`: the unique identifier of the calendar event in the source system; found in the `id` property of the event data returned by the MCP calendar server. This allows for future correlation between calendar events and notes.
 
 ### Note Body Structure
 
