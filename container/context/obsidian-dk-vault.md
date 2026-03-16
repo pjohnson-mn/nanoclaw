@@ -2,23 +2,56 @@
 
 This file provides context on the folder structure, note conventions, and key scripts/templates used in the Obsidian vault "dk-vault", my work vault. It serves as a reference for understanding how the vault is organized and how to create new content that fits within the established system.
 
-# Folder location
-1. First, determine which machine you are running on by running `hostname` via bash.  
-2. Use this table to determine the Obsidian vault location:
 
-| hostname | Vault folder |
-|---|---|
-| pi-1 | /home/pjohnson/dk-vault/ |
-| Yeti | /mnt/c/vaults/dk-vault |
+# Git Configuration
 
+## Vault Remote
 
-# Git / Backup
+The dk-vault uses an HTTPS remote on a self-hosted Gitea instance:
 
-The vault is synced via the obsidian-git plugin with auto-commit messages in the format:
 ```
-vault backup: YYYY-MM-DD HH:mm:ss
+https://g.i.pupaya.net/philj/dk-vault.git
 ```
-Manual commits should follow the same convention or be more descriptive.
+
+## Authentication
+
+Use a Gitea Personal Access Token (PAT) for pushing. The token is stored in the environment variable `GITEA_TOKEN`.
+
+When pushing, use the token in the remote URL:
+
+```bash
+git -C /workspace/extra/dk-vault remote set-url origin https://$GITEA_USER:$GITEA_TOKEN@g.i.pupaya.net/philj/dk-vault.git
+git -C /workspace/extra/dk-vault push
+```
+
+Or as a one-liner for pushing after a commit (URL-encodes the username to handle special characters like `+` and `@`):
+
+```bash
+ENCODED_USER=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$GITEA_USER', safe=''))") && git -C /workspace/extra/dk-vault -c "url.https://$ENCODED_USER:$GITEA_TOKEN@g.i.pupaya.net/.insteadOf=https://g.i.pupaya.net/" push
+```
+
+## Commit Convention
+
+Follow the vault's existing commit message format:
+
+```
+nanoclaw: YYYY-MM-DD HH:mm:ss
+```
+
+For meaningful changes, use a more descriptive message:
+
+```
+nanoclaw: YYYY-MM-DD HH:mm:ss - <brief description>
+```
+
+## Workflow
+
+After modifying any file in the vault:
+1. Ask Phil if he wants to commit and push
+2. Stage the specific file(s) changed
+3. Commit with an appropriate message
+4. Push using `GITEA_TOKEN` env variable as shown above
+5. Report success or any errors back to Phil
 
 # Vault Structure
 
