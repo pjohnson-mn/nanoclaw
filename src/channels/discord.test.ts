@@ -10,8 +10,8 @@ vi.mock('../env.js', () => ({ readEnvFile: vi.fn(() => ({})) }));
 
 // Mock config
 vi.mock('../config.js', () => ({
-  ASSISTANT_NAME: 'Andy',
-  TRIGGER_PATTERN: /^@Andy\b/i,
+  ASSISTANT_NAME: 'Alfred',
+  TRIGGER_PATTERN: /^@Alfred\b/i,
 }));
 
 // Mock logger
@@ -46,7 +46,7 @@ vi.mock('discord.js', () => {
 
   class MockClient {
     eventHandlers = new Map<string, Handler[]>();
-    user: any = { id: '999888777', tag: 'Andy#1234' };
+    user: any = { id: '999888777', tag: 'Alfred#1234' };
     private _ready = false;
 
     constructor(_opts: any) {
@@ -92,11 +92,34 @@ vi.mock('discord.js', () => {
   // Mock TextChannel type
   class TextChannel {}
 
+  // Mock SlashCommandBuilder (fluent API)
+  class SlashCommandBuilder {
+    setName() { return this; }
+    setDescription() { return this; }
+    addStringOption(fn: any) { fn(this); return this; }
+    setRequired() { return this; }
+    toJSON() { return {}; }
+  }
+
+  // Mock REST
+  class REST {
+    setToken() { return this; }
+    put = vi.fn().mockResolvedValue(undefined);
+  }
+
+  const Routes = {
+    applicationCommands: (_id: string) => '/commands',
+  };
+
   return {
     Client: MockClient,
     Events,
     GatewayIntentBits,
     TextChannel,
+    SlashCommandBuilder,
+    REST,
+    Routes,
+    Interaction: class {},
   };
 });
 
@@ -114,7 +137,7 @@ function createTestOpts(
       'dc:1234567890123456': {
         name: 'Test Server #general',
         folder: 'test-server',
-        trigger: '@Andy',
+        trigger: '@Alfred',
         added_at: '2024-01-01T00:00:00.000Z',
       },
     })),
@@ -354,7 +377,7 @@ describe('DiscordChannel', () => {
           'dc:1234567890123456': {
             name: 'DM',
             folder: 'dm',
-            trigger: '@Andy',
+            trigger: '@Alfred',
             added_at: '2024-01-01T00:00:00.000Z',
           },
         })),
@@ -418,7 +441,7 @@ describe('DiscordChannel', () => {
       expect(opts.onMessage).toHaveBeenCalledWith(
         'dc:1234567890123456',
         expect.objectContaining({
-          content: '@Andy what time is it?',
+          content: '@Alfred what time is it?',
         }),
       );
     });
@@ -429,18 +452,18 @@ describe('DiscordChannel', () => {
       await channel.connect();
 
       const msg = createMessage({
-        content: '@Andy hello <@999888777>',
+        content: '@Alfred hello <@999888777>',
         mentionsBotId: true,
         guildName: 'Server',
       });
       await triggerMessage(msg);
 
-      // Should NOT prepend @Andy — already starts with trigger
+      // Should NOT prepend @Alfred — already starts with trigger
       // But the <@botId> should still be stripped
       expect(opts.onMessage).toHaveBeenCalledWith(
         'dc:1234567890123456',
         expect.objectContaining({
-          content: '@Andy hello',
+          content: '@Alfred hello',
         }),
       );
     });
@@ -479,7 +502,7 @@ describe('DiscordChannel', () => {
       expect(opts.onMessage).toHaveBeenCalledWith(
         'dc:1234567890123456',
         expect.objectContaining({
-          content: '@Andy check this',
+          content: '@Alfred check this',
         }),
       );
     });

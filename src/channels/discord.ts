@@ -2,7 +2,11 @@ import {
   Client,
   Events,
   GatewayIntentBits,
+  Interaction,
   Message,
+  REST,
+  Routes,
+  SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
 
@@ -16,6 +20,21 @@ import {
   OnInboundMessage,
   RegisteredGroup,
 } from '../types.js';
+
+const slashCommands = [
+  new SlashCommandBuilder()
+    .setName('ask')
+    .setDescription(`Ask ${ASSISTANT_NAME} a question`)
+    .addStringOption((opt) =>
+      opt
+        .setName('message')
+        .setDescription('Your message')
+        .setRequired(true),
+    ),
+  new SlashCommandBuilder()
+    .setName('chatid')
+    .setDescription('Show this channel\'s ID for NanoClaw registration'),
+];
 
 export interface DiscordChannelOpts {
   onMessage: OnInboundMessage;
@@ -173,16 +192,98 @@ export class DiscordChannel implements Channel {
       logger.error({ err: err.message }, 'Discord client error');
     });
 
+    // Handle slash command interactions
+    this.client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+      if (!interaction.isChatInputCommand()) return;
+
+      const { commandName, channelId } = interaction;
+      const chatJid = `dc:${channelId}`;
+
+      if (commandName === 'chatid') {
+        await interaction.reply({
+          content: `Channel ID: \`${channelId}\`\nJID for registration: \`${chatJid}\``,
+          ephemeral: true,
+        });
+        return;
+      }
+
+      if (commandName === 'ask') {
+        const message = interaction.options.getString('message', true);
+        const senderName =
+          interaction.member && 'displayName' in interaction.member
+            ? (interaction.member.displayName as string)
+            : interaction.user.displayName || interaction.user.username;
+        const sender = interaction.user.id;
+        const timestamp = new Date().toISOString();
+
+        // Determine chat name
+        let chatName: string;
+        if (interaction.guild) {
+          const channel = interaction.channel;
+          const channelName = channel && 'name' in channel ? channel.name : channelId;
+          chatName = `${interaction.guild.name} #${channelName}`;
+        } else {
+          chatName = senderName;
+        }
+
+        const isGroup = interaction.guild !== null;
+        this.opts.onChatMetadata(chatJid, timestamp, chatName, 'discord', isGroup);
+
+        const group = this.opts.registeredGroups()[chatJid];
+        if (!group) {
+          await interaction.reply({
+            content: 'This channel is not registered with NanoClaw. Use `/chatid` to get the channel ID, then register it.',
+            ephemeral: true,
+          });
+          return;
+        }
+
+        // Acknowledge the interaction — the agent will reply via sendMessage
+        await interaction.reply({
+          content: `**${senderName}:** ${message}`,
+        });
+
+        // Prepend trigger so it passes through the trigger gate
+        const content = `@${ASSISTANT_NAME} ${message}`;
+
+        this.opts.onMessage(chatJid, {
+          id: interaction.id,
+          chat_jid: chatJid,
+          sender,
+          sender_name: senderName,
+          content,
+          timestamp,
+          is_from_me: false,
+        });
+
+        logger.info(
+          { chatJid, chatName, sender: senderName, command: 'ask' },
+          'Discord slash command delivered',
+        );
+      }
+    });
+
     return new Promise<void>((resolve) => {
-      this.client!.once(Events.ClientReady, (readyClient) => {
+      this.client!.once(Events.ClientReady, async (readyClient) => {
         logger.info(
           { username: readyClient.user.tag, id: readyClient.user.id },
           'Discord bot connected',
         );
+
+        // Register slash commands with Discord API
+        try {
+          const rest = new REST({ version: '10' }).setToken(this.botToken);
+          await rest.put(
+            Routes.applicationCommands(readyClient.user.id),
+            { body: slashCommands.map((cmd) => cmd.toJSON()) },
+          );
+          logger.info('Discord slash commands registered');
+        } catch (err) {
+          logger.error({ err }, 'Failed to register Discord slash commands');
+        }
+
         console.log(`\n  Discord bot: ${readyClient.user.tag}`);
-        console.log(
-          `  Use /chatid command or check channel IDs in Discord settings\n`,
-        );
+        console.log(`  Slash commands: /ask, /chatid\n`);
         resolve();
       });
 
@@ -191,6 +292,15 @@ export class DiscordChannel implements Channel {
   }
 
   async sendMessage(jid: string, text: string): Promise<void> {
+    // Stop typing immediately — must happen before sending so no in-flight
+    // interval callback can re-trigger typing after the message lands
+    this.typingActive.delete(jid);
+    const typingInterval = this.typingIntervals.get(jid);
+    if (typingInterval) {
+      clearInterval(typingInterval);
+      this.typingIntervals.delete(jid);
+    }
+
     if (!this.client) {
       logger.warn('Discord client not initialized');
       return;
@@ -238,17 +348,45 @@ export class DiscordChannel implements Channel {
     }
   }
 
+  // Track per-channel typing intervals and abort flags
+  private typingIntervals = new Map<string, ReturnType<typeof setInterval>>();
+  private typingActive = new Set<string>();
+
   async setTyping(jid: string, isTyping: boolean): Promise<void> {
-    if (!this.client || !isTyping) return;
-    try {
-      const channelId = jid.replace(/^dc:/, '');
-      const channel = await this.client.channels.fetch(channelId);
-      if (channel && 'sendTyping' in channel) {
-        await (channel as TextChannel).sendTyping();
+    if (!this.client) return;
+
+    if (!isTyping) {
+      this.typingActive.delete(jid);
+      const existing = this.typingIntervals.get(jid);
+      if (existing) {
+        clearInterval(existing);
+        this.typingIntervals.delete(jid);
       }
-    } catch (err) {
-      logger.debug({ jid, err }, 'Failed to send Discord typing indicator');
+      return;
     }
+
+    // Already typing — don't stack intervals
+    if (this.typingIntervals.has(jid)) return;
+
+    this.typingActive.add(jid);
+
+    const sendTyping = async () => {
+      // Bail if typing was stopped while this call was queued/in-flight
+      if (!this.typingActive.has(jid)) return;
+      try {
+        const channelId = jid.replace(/^dc:/, '');
+        const channel = await this.client!.channels.fetch(channelId);
+        if (this.typingActive.has(jid) && channel && 'sendTyping' in channel) {
+          await (channel as TextChannel).sendTyping();
+        }
+      } catch (err) {
+        logger.debug({ jid, err }, 'Failed to send Discord typing indicator');
+      }
+    };
+
+    // Send immediately, then refresh every 8s (Discord typing expires after ~10s)
+    await sendTyping();
+    this.typingIntervals.set(jid, setInterval(sendTyping, 8000));
   }
 }
 
