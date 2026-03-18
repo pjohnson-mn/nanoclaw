@@ -26,14 +26,29 @@ const slashCommands = [
     .setName('ask')
     .setDescription(`Ask ${ASSISTANT_NAME} a question`)
     .addStringOption((opt) =>
+      opt.setName('message').setDescription('Your message').setRequired(true),
+    ),
+  new SlashCommandBuilder()
+    .setName('jot')
+    .setDescription('Quickly capture a thought to your vault')
+    .addStringOption((opt) =>
       opt
-        .setName('message')
-        .setDescription('Your message')
+        .setName('thought')
+        .setDescription('Your thought or idea')
+        .setRequired(true),
+    ),
+  new SlashCommandBuilder()
+    .setName('j')
+    .setDescription('Quickly capture a thought (shorthand for /jot)')
+    .addStringOption((opt) =>
+      opt
+        .setName('thought')
+        .setDescription('Your thought or idea')
         .setRequired(true),
     ),
   new SlashCommandBuilder()
     .setName('chatid')
-    .setDescription('Show this channel\'s ID for NanoClaw registration'),
+    .setDescription("Show this channel's ID for NanoClaw registration"),
 ];
 
 export interface DiscordChannelOpts {
@@ -193,75 +208,103 @@ export class DiscordChannel implements Channel {
     });
 
     // Handle slash command interactions
-    this.client.on(Events.InteractionCreate, async (interaction: Interaction) => {
-      if (!interaction.isChatInputCommand()) return;
+    this.client.on(
+      Events.InteractionCreate,
+      async (interaction: Interaction) => {
+        if (!interaction.isChatInputCommand()) return;
 
-      const { commandName, channelId } = interaction;
-      const chatJid = `dc:${channelId}`;
+        const { commandName, channelId } = interaction;
+        const chatJid = `dc:${channelId}`;
 
-      if (commandName === 'chatid') {
-        await interaction.reply({
-          content: `Channel ID: \`${channelId}\`\nJID for registration: \`${chatJid}\``,
-          ephemeral: true,
-        });
-        return;
-      }
-
-      if (commandName === 'ask') {
-        const message = interaction.options.getString('message', true);
-        const senderName =
-          interaction.member && 'displayName' in interaction.member
-            ? (interaction.member.displayName as string)
-            : interaction.user.displayName || interaction.user.username;
-        const sender = interaction.user.id;
-        const timestamp = new Date().toISOString();
-
-        // Determine chat name
-        let chatName: string;
-        if (interaction.guild) {
-          const channel = interaction.channel;
-          const channelName = channel && 'name' in channel ? channel.name : channelId;
-          chatName = `${interaction.guild.name} #${channelName}`;
-        } else {
-          chatName = senderName;
-        }
-
-        const isGroup = interaction.guild !== null;
-        this.opts.onChatMetadata(chatJid, timestamp, chatName, 'discord', isGroup);
-
-        const group = this.opts.registeredGroups()[chatJid];
-        if (!group) {
+        if (commandName === 'chatid') {
           await interaction.reply({
-            content: 'This channel is not registered with NanoClaw. Use `/chatid` to get the channel ID, then register it.',
+            content: `Channel ID: \`${channelId}\`\nJID for registration: \`${chatJid}\``,
             ephemeral: true,
           });
           return;
         }
 
-        // Acknowledge the interaction — the agent will reply via sendMessage
-        await interaction.reply({
-          content: `**${senderName}:** ${message}`,
-        });
+        if (
+          commandName === 'ask' ||
+          commandName === 'jot' ||
+          commandName === 'j'
+        ) {
+          const isJot = commandName === 'jot' || commandName === 'j';
+          const rawInput = interaction.options.getString(
+            isJot ? 'thought' : 'message',
+            true,
+          );
+          const senderName =
+            interaction.member && 'displayName' in interaction.member
+              ? (interaction.member.displayName as string)
+              : interaction.user.displayName || interaction.user.username;
+          const sender = interaction.user.id;
+          const timestamp = new Date().toISOString();
 
-        // Prepend trigger so it passes through the trigger gate
-        const content = `@${ASSISTANT_NAME} ${message}`;
+          // Determine chat name
+          let chatName: string;
+          if (interaction.guild) {
+            const channel = interaction.channel;
+            const channelName =
+              channel && 'name' in channel ? channel.name : channelId;
+            chatName = `${interaction.guild.name} #${channelName}`;
+          } else {
+            chatName = senderName;
+          }
 
-        this.opts.onMessage(chatJid, {
-          id: interaction.id,
-          chat_jid: chatJid,
-          sender,
-          sender_name: senderName,
-          content,
-          timestamp,
-          is_from_me: false,
-        });
+          const isGroup = interaction.guild !== null;
+          this.opts.onChatMetadata(
+            chatJid,
+            timestamp,
+            chatName,
+            'discord',
+            isGroup,
+          );
 
-        logger.info(
-          { chatJid, chatName, sender: senderName, command: 'ask' },
-          'Discord slash command delivered',
-        );
-      }
-    });
+          const group = this.opts.registeredGroups()[chatJid];
+          if (!group) {
+            await interaction.reply({
+              content:
+                'This channel is not registered with NanoClaw. Use `/chatid` to get the channel ID, then register it.',
+              ephemeral: true,
+            });
+            return;
+          }
+
+          // Acknowledge the interaction — the agent will reply via sendMessage
+          if (isJot) {
+            await interaction.reply({
+              content: `**${senderName}** jotted: ${rawInput}`,
+            });
+          } else {
+            await interaction.reply({
+              content: `**${senderName}:** ${rawInput}`,
+            });
+          }
+
+          // Prepend trigger so it passes through the trigger gate.
+          // For jot commands, wrap with [Jot] prefix so the container skill triggers.
+          const content = isJot
+            ? `@${ASSISTANT_NAME} [Jot] ${rawInput}`
+            : `@${ASSISTANT_NAME} ${rawInput}`;
+
+          this.opts.onMessage(chatJid, {
+            id: interaction.id,
+            chat_jid: chatJid,
+            sender,
+            sender_name: senderName,
+            content,
+            timestamp,
+            is_from_me: false,
+          });
+
+          logger.info(
+            { chatJid, chatName, sender: senderName, command: commandName },
+            'Discord slash command delivered',
+          );
+        }
+      },
+    );
 
     return new Promise<void>((resolve) => {
       this.client!.once(Events.ClientReady, async (readyClient) => {
@@ -273,17 +316,16 @@ export class DiscordChannel implements Channel {
         // Register slash commands with Discord API
         try {
           const rest = new REST({ version: '10' }).setToken(this.botToken);
-          await rest.put(
-            Routes.applicationCommands(readyClient.user.id),
-            { body: slashCommands.map((cmd) => cmd.toJSON()) },
-          );
+          await rest.put(Routes.applicationCommands(readyClient.user.id), {
+            body: slashCommands.map((cmd) => cmd.toJSON()),
+          });
           logger.info('Discord slash commands registered');
         } catch (err) {
           logger.error({ err }, 'Failed to register Discord slash commands');
         }
 
         console.log(`\n  Discord bot: ${readyClient.user.tag}`);
-        console.log(`  Slash commands: /ask, /chatid\n`);
+        console.log(`  Slash commands: /ask, /jot, /j, /chatid\n`);
         resolve();
       });
 

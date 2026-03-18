@@ -33,6 +33,7 @@ const clientRef = vi.hoisted(() => ({ current: null as any }));
 vi.mock('discord.js', () => {
   const Events = {
     MessageCreate: 'messageCreate',
+    InteractionCreate: 'interactionCreate',
     ClientReady: 'ready',
     Error: 'error',
   };
@@ -94,16 +95,29 @@ vi.mock('discord.js', () => {
 
   // Mock SlashCommandBuilder (fluent API)
   class SlashCommandBuilder {
-    setName() { return this; }
-    setDescription() { return this; }
-    addStringOption(fn: any) { fn(this); return this; }
-    setRequired() { return this; }
-    toJSON() { return {}; }
+    setName() {
+      return this;
+    }
+    setDescription() {
+      return this;
+    }
+    addStringOption(fn: any) {
+      fn(this);
+      return this;
+    }
+    setRequired() {
+      return this;
+    }
+    toJSON() {
+      return {};
+    }
   }
 
   // Mock REST
   class REST {
-    setToken() { return this; }
+    setToken() {
+      return this;
+    }
     put = vi.fn().mockResolvedValue(undefined);
   }
 
@@ -786,6 +800,123 @@ describe('DiscordChannel', () => {
       await channel.setTyping('dc:1234567890123456', true);
 
       // No error
+    });
+  });
+
+  // --- Jot slash commands ---
+
+  describe('jot slash commands', () => {
+    function createInteraction(overrides: {
+      commandName: string;
+      optionName: string;
+      optionValue: string;
+      channelId?: string;
+      userId?: string;
+      username?: string;
+      displayName?: string;
+      guildName?: string;
+      channelName?: string;
+    }) {
+      const channelId = overrides.channelId ?? '1234567890123456';
+      return {
+        isChatInputCommand: () => true,
+        commandName: overrides.commandName,
+        channelId,
+        options: {
+          getString: (name: string, _required: boolean) =>
+            name === overrides.optionName ? overrides.optionValue : null,
+        },
+        user: {
+          id: overrides.userId ?? '55512345',
+          username: overrides.username ?? 'alice',
+          displayName: overrides.displayName ?? 'Alice',
+        },
+        member: overrides.displayName
+          ? { displayName: overrides.displayName }
+          : null,
+        guild: overrides.guildName ? { name: overrides.guildName } : null,
+        channel: { name: overrides.channelName ?? 'general' },
+        id: 'interaction_001',
+        reply: vi.fn().mockResolvedValue(undefined),
+      };
+    }
+
+    async function triggerInteraction(interaction: any) {
+      const handlers =
+        currentClient().eventHandlers.get('interactionCreate') || [];
+      for (const h of handlers) await h(interaction);
+    }
+
+    it('/jot delivers message with [Jot] prefix', async () => {
+      const opts = createTestOpts();
+      const channel = new DiscordChannel('test-token', opts);
+      await channel.connect();
+
+      const interaction = createInteraction({
+        commandName: 'jot',
+        optionName: 'thought',
+        optionValue: 'token bucket might work better for rate limiting',
+        guildName: 'Test Server',
+      });
+      await triggerInteraction(interaction);
+
+      expect(interaction.reply).toHaveBeenCalledWith({
+        content:
+          '**Alice** jotted: token bucket might work better for rate limiting',
+      });
+      expect(opts.onMessage).toHaveBeenCalledWith(
+        'dc:1234567890123456',
+        expect.objectContaining({
+          content:
+            '@Alfred [Jot] token bucket might work better for rate limiting',
+        }),
+      );
+    });
+
+    it('/j delivers message with [Jot] prefix (shorthand)', async () => {
+      const opts = createTestOpts();
+      const channel = new DiscordChannel('test-token', opts);
+      await channel.connect();
+
+      const interaction = createInteraction({
+        commandName: 'j',
+        optionName: 'thought',
+        optionValue: 'remember to check the logs',
+        guildName: 'Test Server',
+      });
+      await triggerInteraction(interaction);
+
+      expect(interaction.reply).toHaveBeenCalledWith({
+        content: '**Alice** jotted: remember to check the logs',
+      });
+      expect(opts.onMessage).toHaveBeenCalledWith(
+        'dc:1234567890123456',
+        expect.objectContaining({
+          content: '@Alfred [Jot] remember to check the logs',
+        }),
+      );
+    });
+
+    it('/jot replies ephemeral for unregistered channel', async () => {
+      const opts = createTestOpts({
+        registeredGroups: vi.fn(() => ({})),
+      });
+      const channel = new DiscordChannel('test-token', opts);
+      await channel.connect();
+
+      const interaction = createInteraction({
+        commandName: 'jot',
+        optionName: 'thought',
+        optionValue: 'some thought',
+        guildName: 'Unknown Server',
+      });
+      await triggerInteraction(interaction);
+
+      expect(interaction.reply).toHaveBeenCalledWith({
+        content: expect.stringContaining('not registered'),
+        ephemeral: true,
+      });
+      expect(opts.onMessage).not.toHaveBeenCalled();
     });
   });
 
