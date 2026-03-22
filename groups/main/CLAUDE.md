@@ -78,6 +78,10 @@ Explicit user requests:
 - do NOT update global memory unless specifically requested by the user.
 
 
+## Email Notifications
+
+When you receive an email notification (messages starting with `[Email via <account> from ...`), inform the user about it but do NOT reply to the email unless specifically asked. The account label (e.g., "ruzan") tells you which Gmail account received it. You have Gmail tools available — use them only when the user explicitly asks you to reply, forward, or take action on an email.
+
 ## WhatsApp Formatting (and other messaging apps)
 
 Do NOT use markdown headings (##) in WhatsApp messages. Only use:

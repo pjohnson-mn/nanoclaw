@@ -18,13 +18,13 @@ describe('GmailChannel', () => {
   let channel: GmailChannel;
 
   beforeEach(() => {
-    channel = new GmailChannel(makeOpts());
+    channel = new GmailChannel(makeOpts(), 'ruzan');
   });
 
   describe('ownsJid', () => {
-    it('returns true for gmail: prefixed JIDs', () => {
-      expect(channel.ownsJid('gmail:abc123')).toBe(true);
-      expect(channel.ownsJid('gmail:thread-id-456')).toBe(true);
+    it('returns true for account-prefixed gmail JIDs', () => {
+      expect(channel.ownsJid('gmail-ruzan:abc123')).toBe(true);
+      expect(channel.ownsJid('gmail-ruzan:thread-id-456')).toBe(true);
     });
 
     it('returns false for non-gmail JIDs', () => {
@@ -33,11 +33,15 @@ describe('GmailChannel', () => {
       expect(channel.ownsJid('dc:456')).toBe(false);
       expect(channel.ownsJid('user@s.whatsapp.net')).toBe(false);
     });
+
+    it('returns false for other gmail account JIDs', () => {
+      expect(channel.ownsJid('gmail-work:abc123')).toBe(false);
+    });
   });
 
   describe('name', () => {
-    it('is gmail', () => {
-      expect(channel.name).toBe('gmail');
+    it('includes account label', () => {
+      expect(channel.name).toBe('gmail-ruzan');
     });
   });
 
@@ -56,19 +60,21 @@ describe('GmailChannel', () => {
 
   describe('constructor options', () => {
     it('accepts custom poll interval', () => {
-      const ch = new GmailChannel(makeOpts(), 30000);
-      expect(ch.name).toBe('gmail');
+      const ch = new GmailChannel(makeOpts(), 'test', 30000);
+      expect(ch.name).toBe('gmail-test');
     });
 
     it('defaults to unread query when no filter configured', () => {
-      const ch = new GmailChannel(makeOpts());
-      const query = (ch as unknown as { buildQuery: () => string }).buildQuery();
+      const ch = new GmailChannel(makeOpts(), 'test');
+      const query = (
+        ch as unknown as { buildQuery: () => string }
+      ).buildQuery();
       expect(query).toBe('is:unread category:primary');
     });
 
     it('defaults with no options provided', () => {
-      const ch = new GmailChannel(makeOpts());
-      expect(ch.name).toBe('gmail');
+      const ch = new GmailChannel(makeOpts(), 'test');
+      expect(ch.name).toBe('gmail-test');
     });
   });
 });
