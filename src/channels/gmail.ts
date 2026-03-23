@@ -211,7 +211,10 @@ export class GmailChannel implements Channel {
         'Gmail seeded existing message IDs (skipping initial delivery)',
       );
     } catch (err) {
-      logger.warn({ err, account: this.accountLabel }, 'Gmail seed failed, first poll may deliver old emails');
+      logger.warn(
+        { err, account: this.accountLabel },
+        'Gmail seed failed, first poll may deliver old emails',
+      );
     }
   }
 
@@ -392,7 +395,9 @@ if (fs.existsSync(gmailBaseDir)) {
       !fs.existsSync(path.join(accountDir, 'gcp-oauth.keys.json')) ||
       !fs.existsSync(path.join(accountDir, 'credentials.json'))
     ) {
-      logger.warn(`Gmail: credentials not found in ~/.gmail-mcp/${entry.name}/`);
+      logger.warn(
+        `Gmail: credentials not found in ~/.gmail-mcp/${entry.name}/`,
+      );
       continue;
     }
     const label = entry.name;
