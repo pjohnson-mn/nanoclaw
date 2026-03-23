@@ -12,6 +12,7 @@ Multiple context files are stored for important semantics and are updateable, an
 | me.md | Context to know about the main user (Phil) |
 | work.md | Critical details about my job |
 | goals.md | Strategic wins and achievements Phil is striving for. |
+| email-and-calendar.md | what to know about my email accounts and calendars |
 
 ## What You Can Do
 
