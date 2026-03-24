@@ -115,12 +115,12 @@ Construct the search query by combining the recording name and its timestamp for
 query = f"{name} {start_at}"
 ```
 
-Using the Qdrant skill, search the `meetings/` folder of the vault for the note most semantically similar to this query.
+Using the Qdrant skill, search the `meetings/` and `1-1s/` folders of the vault for the note most semantically similar to this query.
 
 **What to pass to Qdrant:**
 - Search text: `"{name} {start_at}"` (e.g. `"My notes from the meeting 2024-01-15T10:04:27"`)
-- Scope: `~/dk-vault/meetings/` folder only
-- Return: top 1 result (most similar note path)
+- Scope: `~/dk-vault/meetings/` and `~/dk-vault/1-1s/` folders only
+- Return: top 1 result (most similar note path / name)
 
 If no result is returned or similarity is below threshold (defer to Qdrant skill defaults), skip the backlink step and log:
 ```
