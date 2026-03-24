@@ -25,7 +25,7 @@ Use this skill when the user asks about someone's calendar availability, free/bu
 
 | Parameter    | Type       | Required | Description                                                                 |
 |------------- |----------- |--------- |-----------------------------------------------------------------------------|
-| `emails`     | `string[]` | Yes      | List of email addresses to check. Maximum 20 per call.                      |
+| `emails`     | `string[]` | Yes      | List of email addresses to check. Maximum 20 per call.  Do not inclued Phil (phil.johnson@digikey.com) unless specifically asked.                      |
 | `startTime`  | `object`   | Yes      | Start of the window to check. Must include `dateTime` and `timeZone`.       |
 | `endTime`    | `object`   | Yes      | End of the window to check. Must include `dateTime` and `timeZone`.         |
 | `interval`   | `integer`  | No       | Slot duration in minutes. Min 5, max 1440. Defaults to 30.                  |
