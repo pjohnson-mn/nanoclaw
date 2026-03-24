@@ -15,7 +15,7 @@ If you don't know what these are, then you need to ask for them.
 - invitees
 - start date and time (Central Time)
 - end date and time
-- meeting subject
+- meeting subject / title
 - meeting body / agenda
 - is it an all-day event? (assume no)
 
