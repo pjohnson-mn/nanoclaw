@@ -14,5 +14,21 @@ This context is about the email and calendar services Phil uses regularly.
 | family-calendar | Gmail | family events, appointments | Yes | under ruzan-gmail account, this is where we put events so the family knows what is happening; shared calendar in Gmail |
 
 
+# Available MCP Tools
+
+## Gmail
+| Account | MCP Server | Tools |
+|---------|-----------|-------|
+| ruzan-gmail | `gmail-ruzan` | `mcp__gmail-ruzan__send_email`, `mcp__gmail-ruzan__draft_email`, `mcp__gmail-ruzan__read_email`, `mcp__gmail-ruzan__search_emails`, `mcp__gmail-ruzan__list_email_labels`, `mcp__gmail-ruzan__list_filters` |
+| phil-gmail | not yet configured | — |
+
+## Google Calendar
+| Account | MCP Server | Tools |
+|---------|-----------|-------|
+| ruzan-gmail | `gcal-ruzan` | `mcp__gcal-ruzan__list-calendars`, `mcp__gcal-ruzan__list-events`, `mcp__gcal-ruzan__search-events`, `mcp__gcal-ruzan__get-event`, `mcp__gcal-ruzan__create-event`, `mcp__gcal-ruzan__update-event`, `mcp__gcal-ruzan__delete-event`, `mcp__gcal-ruzan__get-freebusy`, `mcp__gcal-ruzan__respond-to-event`, `mcp__gcal-ruzan__get-current-time` |
+
+When using calendar tools, pass `account: ["ruzan"]` to target the ruzan account specifically.
+
 # Notes
 - phil-work resources are only available through the phils-outlook MCP server
+- ruzan-gmail MCP is authenticated and available in all agent sessions

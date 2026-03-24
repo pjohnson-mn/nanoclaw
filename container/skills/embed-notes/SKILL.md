@@ -732,56 +732,39 @@ When running on a schedule (every 15 minutes), use this fast path instead of Ste
 
 ### Step 0R — Pull latest vault changes
 
+Capture the current HEAD before pulling so we can diff exactly what changed:
+
 ```bash
-git -C /workspace/extra/dk-vault pull --ff-only 2>&1 | tail -3
+OLD_HEAD=$(git -C /workspace/extra/dk-vault rev-parse HEAD 2>/dev/null || echo "")
+PULL_OUTPUT=$(git -C /workspace/extra/dk-vault pull --ff-only 2>&1)
+echo "$PULL_OUTPUT"
+NEW_HEAD=$(git -C /workspace/extra/dk-vault rev-parse HEAD 2>/dev/null || echo "")
 ```
 
-If the pull fails, log and continue with whatever is on disk.
+If the pull fails (network error, conflict, etc.), log the error and set `NEW_HEAD=""` so the file list falls back to empty — skip embedding rather than scanning everything.
 
 ---
 
-### Step 2R — Find recently modified files
+### Step 2R — Derive changed files from git diff
+
+Use the before/after HEAD refs to get the exact list of `.md` files that changed in this pull:
 
 ```bash
-MINUTES=20  # slight buffer over the 15-min cron interval
-find /workspace/extra/dk-vault/TaskNotes/Tasks \
-     /workspace/extra/dk-vault/TaskNotes/Updates \
-     /workspace/extra/dk-vault/_ai_note_summaries \
-     /workspace/extra/dk-vault/@people \
-     /workspace/extra/dk-vault/1-1s \
-     "/workspace/extra/dk-vault/Daily Notes" \
-     /workspace/extra/dk-vault/Jots \
-     /workspace/extra/dk-vault/learning \
-     /workspace/extra/dk-vault/meetings \
-     /workspace/extra/dk-vault/PKB \
-     -name "*.md" -not -name ".*" -newer /tmp/embed_notes_last_run \
-     2>/dev/null | sort > /tmp/recent_files.txt
-
-# On first run (no sentinel), fall back to -mmin
-if [ ! -s /tmp/recent_files.txt ]; then
-  find /workspace/extra/dk-vault/TaskNotes/Tasks \
-       /workspace/extra/dk-vault/TaskNotes/Updates \
-       /workspace/extra/dk-vault/_ai_note_summaries \
-       /workspace/extra/dk-vault/@people \
-       /workspace/extra/dk-vault/1-1s \
-       "/workspace/extra/dk-vault/Daily Notes" \
-       /workspace/extra/dk-vault/Jots \
-       /workspace/extra/dk-vault/learning \
-       /workspace/extra/dk-vault/meetings \
-       /workspace/extra/dk-vault/PKB \
-       -name "*.md" -not -name ".*" -mmin -$MINUTES \
-       2>/dev/null | sort > /tmp/recent_files.txt
+if [ -n "$OLD_HEAD" ] && [ -n "$NEW_HEAD" ] && [ "$OLD_HEAD" != "$NEW_HEAD" ]; then
+  git -C /workspace/extra/dk-vault diff --name-only "$OLD_HEAD" "$NEW_HEAD" \
+    | grep '\.md$' \
+    | grep -v '/\.' \
+    | sed 's|^|/workspace/extra/dk-vault/|' \
+    > /tmp/recent_files.txt
+else
+  # Already up-to-date or pull failed — nothing to embed
+  > /tmp/recent_files.txt
 fi
 
 wc -l /tmp/recent_files.txt
 ```
 
-If `/tmp/recent_files.txt` is empty (0 lines), **stop here** — no new/changed notes. Report: "No vault changes in the last 15 minutes."
-
-Otherwise, update the sentinel and continue:
-```bash
-touch /tmp/embed_notes_last_run
-```
+If `/tmp/recent_files.txt` is empty (0 lines) — which happens when `OLD_HEAD == NEW_HEAD` (already up to date) or when the pull failed — **exit the cron run immediately. Do NOT send any message to the user, not even a confirmation, summary, or "no changes" notice. Produce no output at all.**
 
 ### Step 3R — Parse only recent files
 
@@ -877,11 +860,11 @@ Then skip the Qdrant incremental check (Step 3) since all files in the list are 
 
 ### Reporting for cron runs
 
-Keep it terse — only report if there were actual changes:
+Only send a message if `total_upserted > 0`. Keep it terse:
 ```
 Vault sync: 3 notes updated (meeting, daily, jot) — 7 chunks embedded.
 ```
-If nothing changed, send nothing (no message to user).
+If `total_upserted == 0` (or the file list was empty), **send no message at all — not even a "no changes" or "already up to date" notice.**
 
 ---
 

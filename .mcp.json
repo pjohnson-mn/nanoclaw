@@ -1,3 +1,8 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "phils-outlook": {
+      "type": "http",
+      "url": "https://webhookn8n.pupaya.net/mcp/outlook"
+    }
+  }
 }

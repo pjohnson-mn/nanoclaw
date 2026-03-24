@@ -408,8 +408,10 @@ async function runQuery(
         'TodoWrite', 'ToolSearch', 'Skill',
         'NotebookEdit',
         'mcp__nanoclaw__*',
-        'mcp__gmail__*',
+        'mcp__gmail-ruzan__*',
+        'mcp__gcal-ruzan__*',
         'mcp__qdrant-mcp__*',
+        'mcp__phils-outlook__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -425,13 +427,29 @@ async function runQuery(
             NANOCLAW_IS_MAIN: containerInput.isMain ? '1' : '0',
           },
         },
-        gmail: {
+        'gmail-ruzan': {
           command: 'npx',
           args: ['-y', '@gongrzhe/server-gmail-autoauth-mcp'],
+          env: {
+            GMAIL_OAUTH_PATH: '/home/node/.gmail-mcp/ruzan/gcp-oauth.keys.json',
+            GMAIL_CREDENTIALS_PATH: '/home/node/.gmail-mcp/ruzan/credentials.json',
+          },
+        },
+        'gcal-ruzan': {
+          command: 'npx',
+          args: ['-y', '@cocal/google-calendar-mcp'],
+          env: {
+            GOOGLE_OAUTH_CREDENTIALS: '/home/node/.gmail-mcp/ruzan/gcp-oauth.keys.json',
+            GOOGLE_CALENDAR_MCP_TOKEN_PATH: '/home/node/.gcal-mcp/tokens.json',
+          },
         },
         'qdrant-mcp': {
           type: 'sse',
           url: 'http://pi1.homelab:8000/sse',
+        },
+        'phils-outlook': {
+          type: 'http',
+          url: 'https://webhookn8n.pupaya.net/mcp/outlook',
         },
       },
       hooks: {
