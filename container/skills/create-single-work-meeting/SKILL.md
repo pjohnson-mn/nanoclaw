@@ -21,3 +21,23 @@ If you don't know what these are, then you need to ask for them.
 
 ## Meeting Agenda
 - sections I like to have are: Background, Goals, Agenda
+
+## Meeting Invitees
+- invitees are passed in a specific format to the MCP (array of objects)
+- example:
+[
+    {
+      "emailAddress": {
+        "address": "alice@contoso.com",
+        "name": "Alice Smith"
+      },
+      "type": "required"
+    },
+    {
+      "emailAddress": {
+        "address": "bob@contoso.com",
+        "name": "Bob Jones"
+      },
+      "type": "optional"
+    }
+]
