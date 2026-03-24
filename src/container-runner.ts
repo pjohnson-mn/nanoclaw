@@ -17,6 +17,7 @@ import {
   IDLE_TIMEOUT,
   TIMEZONE,
 } from './config.js';
+import { readEnvFile } from './env.js';
 import { resolveGroupFolderPath, resolveGroupIpcPath } from './group-folder.js';
 import { logger } from './logger.js';
 import {
@@ -326,6 +327,12 @@ export async function runContainerAgent(
   const safeName = group.folder.replace(/[^a-zA-Z0-9-]/g, '-');
   const containerName = `nanoclaw-${safeName}-${Date.now()}`;
   const containerArgs = buildContainerArgs(mounts, containerName);
+
+  // Inject group-specific secrets from .env
+  if (group.folder.startsWith('discord_')) {
+    const { PLAUD_TOKEN } = readEnvFile(['PLAUD_TOKEN']);
+    if (PLAUD_TOKEN) containerArgs.push('-e', `PLAUD_TOKEN=${PLAUD_TOKEN}`);
+  }
 
   logger.debug(
     {
