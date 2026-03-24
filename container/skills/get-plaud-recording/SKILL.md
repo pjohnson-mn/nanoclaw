@@ -1,6 +1,6 @@
 ---
 name: get-plaud-recording
-description: Fetches recent Plaud AI recordings from the last 120 minutes, extracts auto-summary notes, writes them to the Obsidian _ai_summaries folder, and links them to the most semantically similar meeting note. Use this skill whenever the user asks to sync Plaud recordings, ingest Plaud notes, pull in recent recordings, or process Plaud summaries into Obsidian.
+description: Fetches recent Plaud AI recordings from the timefarm specified by the user (default to last 120 minutes), extracts auto-summary notes, writes them to the Obsidian _ai_summaries folder, and links them to the most semantically similar meeting note. Use this skill whenever the user asks to sync Plaud recordings, ingest Plaud notes, pull in recent recordings, or process Plaud summaries into Obsidian.
 ---
 
 # Get Plaud AI Recording Skill
