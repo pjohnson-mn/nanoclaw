@@ -1,7 +1,7 @@
 ---
   name: today
   description: Preps my daily note in my Obsidian vault.
-  allowed-tools: Bash(*), work-outlook(*), new-obsidian-note-for-meetings(*)
+  allowed-tools: Bash(*), phils-outlook(*), new-obsidian-note-for-meetings(*)
   argument-hint: "Date (optional, defaults to today)"
   ---
 
