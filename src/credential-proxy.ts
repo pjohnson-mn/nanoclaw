@@ -32,14 +32,28 @@ export function startCredentialProxy(
     'CLAUDE_CODE_OAUTH_TOKEN',
     'ANTHROPIC_AUTH_TOKEN',
     'ANTHROPIC_BASE_URL',
+    'CLAUDE_CODE_USE_FOUNDRY',
+    'ANTHROPIC_FOUNDRY_API_KEY',
+    'ANTHROPIC_FOUNDRY_BASE_URL',
   ]);
 
-  const authMode: AuthMode = secrets.ANTHROPIC_API_KEY ? 'api-key' : 'oauth';
+  const useFoundry =
+    secrets.CLAUDE_CODE_USE_FOUNDRY === '1' &&
+    !!secrets.ANTHROPIC_FOUNDRY_API_KEY &&
+    !!secrets.ANTHROPIC_FOUNDRY_BASE_URL;
+
+  const authMode: AuthMode = useFoundry
+    ? 'api-key'
+    : secrets.ANTHROPIC_API_KEY
+      ? 'api-key'
+      : 'oauth';
   const oauthToken =
     secrets.CLAUDE_CODE_OAUTH_TOKEN || secrets.ANTHROPIC_AUTH_TOKEN;
 
   const upstreamUrl = new URL(
-    secrets.ANTHROPIC_BASE_URL || 'https://api.anthropic.com',
+    useFoundry
+      ? secrets.ANTHROPIC_FOUNDRY_BASE_URL!
+      : secrets.ANTHROPIC_BASE_URL || 'https://api.anthropic.com',
   );
   const isHttps = upstreamUrl.protocol === 'https:';
   const makeRequest = isHttps ? httpsRequest : httpRequest;
@@ -63,9 +77,11 @@ export function startCredentialProxy(
         delete headers['transfer-encoding'];
 
         if (authMode === 'api-key') {
-          // API key mode: inject x-api-key on every request
+          // Both Foundry and direct Anthropic API use x-api-key
           delete headers['x-api-key'];
-          headers['x-api-key'] = secrets.ANTHROPIC_API_KEY;
+          headers['x-api-key'] = useFoundry
+            ? secrets.ANTHROPIC_FOUNDRY_API_KEY
+            : secrets.ANTHROPIC_API_KEY;
         } else {
           // OAuth mode: replace placeholder Bearer token with the real one
           // only when the container actually sends an Authorization header
@@ -79,11 +95,15 @@ export function startCredentialProxy(
           }
         }
 
+        // Prepend upstream path (e.g. Foundry's /anthropic/) to the request path
+        const basePath = upstreamUrl.pathname.replace(/\/+$/, '');
+        const fullPath = basePath + req.url;
+
         const upstream = makeRequest(
           {
             hostname: upstreamUrl.hostname,
             port: upstreamUrl.port || (isHttps ? 443 : 80),
-            path: req.url,
+            path: fullPath,
             method: req.method,
             headers,
           } as RequestOptions,
@@ -110,7 +130,7 @@ export function startCredentialProxy(
     });
 
     server.listen(port, host, () => {
-      logger.info({ port, host, authMode }, 'Credential proxy started');
+      logger.info({ port, host, authMode, foundry: useFoundry }, 'Credential proxy started');
       resolve(server);
     });
 
@@ -120,6 +140,15 @@ export function startCredentialProxy(
 
 /** Detect which auth mode the host is configured for. */
 export function detectAuthMode(): AuthMode {
-  const secrets = readEnvFile(['ANTHROPIC_API_KEY']);
+  const secrets = readEnvFile([
+    'ANTHROPIC_API_KEY',
+    'CLAUDE_CODE_USE_FOUNDRY',
+    'ANTHROPIC_FOUNDRY_API_KEY',
+  ]);
+  if (
+    secrets.CLAUDE_CODE_USE_FOUNDRY === '1' &&
+    secrets.ANTHROPIC_FOUNDRY_API_KEY
+  )
+    return 'api-key';
   return secrets.ANTHROPIC_API_KEY ? 'api-key' : 'oauth';
 }

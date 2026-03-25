@@ -334,6 +334,9 @@ export async function runContainerAgent(
     if (PLAUD_TOKEN) containerArgs.push('-e', `PLAUD_TOKEN=${PLAUD_TOKEN}`);
   }
 
+  // When Foundry is configured, the proxy handles routing transparently.
+  // The container stays in normal API-key mode — no Foundry vars needed.
+
   logger.debug(
     {
       group: group.name,

@@ -2,6 +2,7 @@ import {
   Client,
   Events,
   GatewayIntentBits,
+  GuildMember,
   Interaction,
   Message,
   REST,
@@ -11,6 +12,7 @@ import {
 } from 'discord.js';
 
 import { ASSISTANT_NAME, TRIGGER_PATTERN } from '../config.js';
+import { handleVoiceCommand } from '../voice.js';
 import { readEnvFile } from '../env.js';
 import { logger } from '../logger.js';
 import { registerChannel, ChannelOpts } from './registry.js';
@@ -76,6 +78,7 @@ export class DiscordChannel implements Channel {
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.GuildVoiceStates,
       ],
     });
 
@@ -163,6 +166,23 @@ export class DiscordChannel implements Channel {
         } catch {
           // Referenced message may have been deleted
         }
+      }
+
+      // Voice commands: "voice join" / "voice leave" (after trigger strip)
+      if (content.includes('voice join') || content.includes('voice leave')) {
+        const subcommand = content.includes('voice join') ? 'join' : 'leave';
+        const askClaude = this.makeAskClaude(
+          chatJid,
+          sender,
+          senderName,
+        );
+        await handleVoiceCommand(
+          subcommand,
+          message.member as GuildMember,
+          message.channel as TextChannel,
+          askClaude,
+        );
+        return;
       }
 
       // Store chat metadata for discovery
@@ -334,6 +354,13 @@ export class DiscordChannel implements Channel {
   }
 
   async sendMessage(jid: string, text: string): Promise<void> {
+    // Resolve any pending voice reply before sending to the text channel
+    const voiceResolve = this.pendingVoiceReplies.get(jid);
+    if (voiceResolve) {
+      this.pendingVoiceReplies.delete(jid);
+      voiceResolve(text);
+    }
+
     // Stop typing immediately — must happen before sending so no in-flight
     // interval callback can re-trigger typing after the message lands
     this.typingActive.delete(jid);
@@ -393,6 +420,37 @@ export class DiscordChannel implements Channel {
   // Track per-channel typing intervals and abort flags
   private typingIntervals = new Map<string, ReturnType<typeof setInterval>>();
   private typingActive = new Set<string>();
+
+  // Pending voice reply resolvers: chatJid → resolve fn
+  private pendingVoiceReplies = new Map<string, (text: string) => void>();
+
+  private makeAskClaude(
+    chatJid: string,
+    sender: string,
+    senderName: string,
+  ): (prompt: string) => Promise<string> {
+    return (prompt: string) =>
+      new Promise<string>((resolve) => {
+        this.pendingVoiceReplies.set(chatJid, resolve);
+        const timestamp = new Date().toISOString();
+        this.opts.onMessage(chatJid, {
+          id: `voice-${Date.now()}`,
+          chat_jid: chatJid,
+          sender,
+          sender_name: senderName,
+          content: `@${ASSISTANT_NAME} ${prompt}`,
+          timestamp,
+          is_from_me: false,
+        });
+        // Timeout after 30 seconds
+        setTimeout(() => {
+          if (this.pendingVoiceReplies.has(chatJid)) {
+            this.pendingVoiceReplies.delete(chatJid);
+            resolve("Sorry, I couldn't process that in time.");
+          }
+        }, 30000);
+      });
+  }
 
   async setTyping(jid: string, isTyping: boolean): Promise<void> {
     if (!this.client) return;
