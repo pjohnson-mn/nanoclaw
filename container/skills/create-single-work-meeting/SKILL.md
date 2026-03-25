@@ -10,7 +10,7 @@ allowed-tools: Bash(*), phils-outlook
 - use the 'phils-outlook' MCP tool in 'create-single-event' mode
 - dates and times should be Central US.
 
-## Required Information
+# Required Information
 If you don't know what these are, then you need to ask for them.
 - invitees
 - start date and time (Central Time)
@@ -19,10 +19,10 @@ If you don't know what these are, then you need to ask for them.
 - meeting body / agenda
 - is it an all-day event? (assume no)
 
-## Meeting Agenda
+# Meeting Agenda
 - sections I like to have are: Background, Goals, Agenda
 
-## Meeting Invitees
+# Meeting Invitees
 - invitees are passed in a specific format to the MCP (array of objects)
 - example:
 [
@@ -41,3 +41,12 @@ If you don't know what these are, then you need to ask for them.
       "type": "optional"
     }
 ]
+
+# Sending Invites
+- the invite body / meeting description needs to be formatted as HTML
+  - the tone should be professional and concise, unless instructed otherwise; if you aren't sure of the tone, ask the user, do not guess.
+- where possible, I like three sections on an invite:
+  - Background - general context of the meeting, high level description of why, or how we got to this point
+  - Goals - what should we get out of the meetings, e.g. outcomes, deliverables, concrete steps
+  - Agenda - meeting flow
+- invitees must be recognized by Outlook before the meeting will go out, so if anyone has a non-Digikey email address in the list it might fail
