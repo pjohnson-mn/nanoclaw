@@ -1,4 +1,7 @@
-# /add-voice
+---
+name: add-voice
+description: Add voice chat capability to Discord
+---
 
 Adds Discord voice channel support to NanoClaw — STT via Groq Whisper, TTS via
 Kokoro-FastAPI (or any OpenAI-compatible TTS endpoint). Voice turns are
