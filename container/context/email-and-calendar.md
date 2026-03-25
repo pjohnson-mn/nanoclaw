@@ -8,6 +8,9 @@ This context is about the email and calendar services Phil uses regularly.
 | phil-gmail | Gmail | Personal email | Phil | philj.mn@gmail.com | Personal account used the most |
 | phil-work | Outlook | Work email for DigiKey job | Phil | phil.johnson@digikey.com | used for work-related communication | 
 
+# Account Usage
+IMPORTANT: keep emails within the same account.  For example, when replying to an email in my work account (Outlook), use that account for the reply.  Do not cross accounts.  When working in the Ruzan account, in my capacity as a zen priest, again do not use other accounts to reply.
+
 # Calendars
 | Name | Platform | Use | Shared? |
 | phil-work | Outlook | Work meetings, appointments | No | Heavily used for work activities
