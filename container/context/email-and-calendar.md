@@ -1,7 +1,12 @@
 # About
 This context is about the email and calendar services Phil uses regularly.
 
-# Email Accounts
+# My Email Addresses
+1. philj.mn@gmail.com - personal email
+2. phil.johnson@digikey.com - work email
+3. ruzanj.mn@gmail.com - Minnesota Zen Meditation Center correspondence, in my capacity as a zen priest
+
+# Email Account Tools
 | Name | Platform | Use | My Name | Email Address | 
 |---|---|---|---|---|
 | ruzan-gmail | Gmail | Zen priest communication | Ruzan | ruzanj.mn@gmail.com | Emails and interactions in my capacity as a Zen priest |
