@@ -171,11 +171,7 @@ export class DiscordChannel implements Channel {
       // Voice commands: "voice join" / "voice leave" (after trigger strip)
       if (content.includes('voice join') || content.includes('voice leave')) {
         const subcommand = content.includes('voice join') ? 'join' : 'leave';
-        const askClaude = this.makeAskClaude(
-          chatJid,
-          sender,
-          senderName,
-        );
+        const askClaude = this.makeAskClaude(chatJid, sender, senderName);
         await handleVoiceCommand(
           subcommand,
           message.member as GuildMember,
