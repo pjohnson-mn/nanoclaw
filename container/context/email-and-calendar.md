@@ -1,12 +1,18 @@
 # About
 This context is about the email and calendar services Phil uses regularly.
 
-# Email Accounts
+# My Email Addresses
+Use the Email Account Tools section for a list of my email addresses and their domain.
+
+# Email Account Tools
 | Name | Platform | Use | My Name | Email Address | 
 |---|---|---|---|---|
 | ruzan-gmail | Gmail | Zen priest communication | Ruzan | ruzanj.mn@gmail.com | Emails and interactions in my capacity as a Zen priest |
 | phil-gmail | Gmail | Personal email | Phil | philj.mn@gmail.com | Personal account used the most |
 | phil-work | Outlook | Work email for DigiKey job | Phil | phil.johnson@digikey.com | used for work-related communication | 
+
+# Account Usage
+IMPORTANT: keep emails within the same account.  For example, when replying to an email in my work account (Outlook), use that account for the reply.  Do not cross accounts.  When working in the Ruzan account, in my capacity as a zen priest, again do not use other accounts to reply.
 
 # Calendars
 | Name | Platform | Use | Shared? |
