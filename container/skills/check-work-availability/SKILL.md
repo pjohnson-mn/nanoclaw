@@ -1,6 +1,6 @@
 ---
 name: check-work-availability
-description: Check ep to 20 people's availability at the office on Outlook
+description: Check up to 20 people's availability at the office on Outlook
 allowed-tools: phils-outlook
 ---
 
