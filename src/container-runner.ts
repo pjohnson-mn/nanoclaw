@@ -328,10 +328,22 @@ export async function runContainerAgent(
   const containerName = `nanoclaw-${safeName}-${Date.now()}`;
   const containerArgs = buildContainerArgs(mounts, containerName);
 
-  // Inject group-specific secrets from .env
+  // Inject group-specific secrets from .env.
+  // Must splice before the last element (CONTAINER_IMAGE) so flags land
+  // before the image name in the docker/podman command.
+  const extraEnv: string[] = [];
+
   if (group.folder.startsWith('discord_')) {
     const { PLAUD_TOKEN } = readEnvFile(['PLAUD_TOKEN']);
-    if (PLAUD_TOKEN) containerArgs.push('-e', `PLAUD_TOKEN=${PLAUD_TOKEN}`);
+    if (PLAUD_TOKEN) extraEnv.push('-e', `PLAUD_TOKEN=${PLAUD_TOKEN}`);
+  }
+
+  // Mealie recipe manager — available to all groups
+  const { MEALIE_API_KEY } = readEnvFile(['MEALIE_API_KEY']);
+  if (MEALIE_API_KEY) extraEnv.push('-e', `MEALIE_API_KEY=${MEALIE_API_KEY}`);
+
+  if (extraEnv.length) {
+    containerArgs.splice(containerArgs.length - 1, 0, ...extraEnv);
   }
 
   // When Foundry is configured, the proxy handles routing transparently.
