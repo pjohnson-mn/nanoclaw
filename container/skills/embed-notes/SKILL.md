@@ -637,11 +637,13 @@ def point_id(file_path, chunk_index):
     return int(hashlib.sha256(key.encode()).hexdigest()[:15], 16)
 
 def get_embeddings(texts):
-    payload = json.dumps({"model": "text-embedding-3-small", "input": texts})
+    payload = json.dumps({"model": "phil-text-embedding-3-small", "input": texts})
     with open("/tmp/embed_batch.json", "w") as f:
         f.write(payload)
+
+    OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com")
     result = subprocess.run([
-        "curl", "-s", "-X", "POST", "https://api.openai.com/v1/embeddings",
+        "curl", "-s", "-X", "POST", f"{OPENAI_BASE_URL}/v1/embeddings",
         "-H", f"Authorization: Bearer {OPENAI_KEY}",
         "-H", "Content-Type: application/json",
         "-d", "@/tmp/embed_batch.json"
@@ -883,10 +885,10 @@ Triggered when the user asks to:
 ## Semantic Search (ad-hoc use)
 
 ```bash
-QUERY_VECTOR=$(curl -s -X POST "https://api.openai.com/v1/embeddings" \
+QUERY_VECTOR=$(curl -s -X POST "$(printenv OPENAI_BASE_URL)/v1/embeddings" \
   -H "Authorization: Bearer $(printenv OPENAI_API_KEY)" \
   -H "Content-Type: application/json" \
-  -d '{"model": "text-embedding-3-small", "input": "USER QUERY HERE"}' \
+  -d '{"model": "phil-text-embedding-3-small", "input": "USER QUERY HERE"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['data'][0]['embedding'])")
 
 cat > /tmp/qdrant_search.json <<ENDJSON
