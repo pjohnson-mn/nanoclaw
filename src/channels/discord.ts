@@ -23,27 +23,57 @@ import {
   RegisteredGroup,
 } from '../types.js';
 
+import mammoth from 'mammoth';
+import * as XLSX from 'xlsx';
+
 const SUPPORTED_IMAGE_TYPES = new Set([
   'image/jpeg',
   'image/png',
   'image/gif',
   'image/webp',
 ]);
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
 
-async function downloadImageAsBase64(
+async function downloadAttachment(
   url: string,
   maxBytes: number,
-): Promise<string | null> {
+): Promise<Buffer | null> {
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
     if (buf.byteLength > maxBytes) return null;
-    return Buffer.from(buf).toString('base64');
+    return Buffer.from(buf);
   } catch {
     return null;
   }
+}
+
+async function extractDocxText(buf: Buffer): Promise<string | null> {
+  try {
+    const result = await mammoth.extractRawText({ buffer: buf });
+    return result.value || null;
+  } catch {
+    return null;
+  }
+}
+
+function extractXlsxText(buf: Buffer): string | null {
+  try {
+    const workbook = XLSX.read(buf, { type: 'buffer' });
+    const sheets: string[] = [];
+    for (const name of workbook.SheetNames) {
+      const csv = XLSX.utils.sheet_to_csv(workbook.Sheets[name]);
+      if (csv.trim()) sheets.push(`--- Sheet: ${name} ---\n${csv}`);
+    }
+    return sheets.length > 0 ? sheets.join('\n\n') : null;
+  } catch {
+    return null;
+  }
+}
+
+function fileTextMarker(filename: string, content: string): string {
+  return `[file:text:${filename}:${content}:endfile]`;
 }
 
 const slashCommands = [
@@ -152,26 +182,83 @@ export class DiscordChannel implements Channel {
         }
       }
 
-      // Handle attachments — download supported images as base64, placeholder for rest
+      // Handle attachments — download and process supported types
       if (message.attachments.size > 0) {
         const parts: string[] = [];
         for (const att of message.attachments.values()) {
           const contentType = att.contentType || '';
+          const name = att.name || 'file';
+
           if (SUPPORTED_IMAGE_TYPES.has(contentType) && att.url) {
-            const b64 = await downloadImageAsBase64(att.url, MAX_IMAGE_BYTES);
-            if (b64) {
-              parts.push(`[image:base64:${contentType}:${b64}]`);
-            } else {
+            // Images → base64 image content block
+            const buf = await downloadAttachment(att.url, MAX_ATTACHMENT_BYTES);
+            if (buf) {
               parts.push(
-                `[Image: ${att.name || 'image'} (download failed or too large)]`,
+                `[image:base64:${contentType}:${buf.toString('base64')}]`,
               );
+            } else {
+              parts.push(`[Image: ${name} (download failed or too large)]`);
+            }
+          } else if (contentType === 'application/pdf' && att.url) {
+            // PDF → base64 document content block (Claude reads PDFs natively)
+            const buf = await downloadAttachment(att.url, MAX_ATTACHMENT_BYTES);
+            if (buf) {
+              parts.push(
+                `[document:base64:application/pdf:${buf.toString('base64')}]`,
+              );
+            } else {
+              parts.push(`[PDF: ${name} (download failed or too large)]`);
+            }
+          } else if (contentType === 'text/plain' && att.url) {
+            // Text files → inline text
+            const buf = await downloadAttachment(att.url, MAX_ATTACHMENT_BYTES);
+            if (buf) {
+              parts.push(fileTextMarker(name, buf.toString('utf-8')));
+            } else {
+              parts.push(`[File: ${name} (download failed or too large)]`);
+            }
+          } else if (
+            (contentType ===
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+              name.endsWith('.docx')) &&
+            att.url
+          ) {
+            // DOCX → extract text
+            const buf = await downloadAttachment(att.url, MAX_ATTACHMENT_BYTES);
+            if (buf) {
+              const text = await extractDocxText(buf);
+              if (text) {
+                parts.push(fileTextMarker(name, text));
+              } else {
+                parts.push(`[File: ${name} (could not extract text)]`);
+              }
+            } else {
+              parts.push(`[File: ${name} (download failed or too large)]`);
+            }
+          } else if (
+            (contentType ===
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+              name.endsWith('.xlsx')) &&
+            att.url
+          ) {
+            // XLSX → extract as CSV
+            const buf = await downloadAttachment(att.url, MAX_ATTACHMENT_BYTES);
+            if (buf) {
+              const text = extractXlsxText(buf);
+              if (text) {
+                parts.push(fileTextMarker(name, text));
+              } else {
+                parts.push(`[File: ${name} (could not extract text)]`);
+              }
+            } else {
+              parts.push(`[File: ${name} (download failed or too large)]`);
             }
           } else if (contentType.startsWith('video/')) {
             parts.push(`[Video: ${att.name || 'video'}]`);
           } else if (contentType.startsWith('audio/')) {
             parts.push(`[Audio: ${att.name || 'audio'}]`);
           } else {
-            parts.push(`[File: ${att.name || 'file'}]`);
+            parts.push(`[File: ${name}]`);
           }
         }
         if (content) {

@@ -144,10 +144,12 @@ const FAKE_B64 = Buffer.from('fake-image-data').toString('base64');
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
-function mockFetchSuccess(data: ArrayBuffer = Buffer.from('fake-image-data')) {
+function mockFetchSuccess(data?: Uint8Array) {
+  const bytes = data ?? new TextEncoder().encode('fake-image-data');
+  const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   mockFetch.mockResolvedValueOnce({
     ok: true,
-    arrayBuffer: () => Promise.resolve(data),
+    arrayBuffer: () => Promise.resolve(ab),
   });
 }
 
@@ -661,13 +663,22 @@ describe('DiscordChannel', () => {
       );
     });
 
-    it('stores file attachment with placeholder', async () => {
+    it('downloads PDF and encodes as document marker', async () => {
+      mockFetchSuccess(new TextEncoder().encode('fake-pdf-data'));
       const opts = createTestOpts();
       const channel = new DiscordChannel('test-token', opts);
       await channel.connect();
 
+      const pdfB64 = Buffer.from('fake-pdf-data').toString('base64');
       const attachments = new Map([
-        ['att1', { name: 'report.pdf', contentType: 'application/pdf' }],
+        [
+          'att1',
+          {
+            name: 'report.pdf',
+            contentType: 'application/pdf',
+            url: 'https://cdn.discord.com/report.pdf',
+          },
+        ],
       ]);
       const msg = createMessage({
         content: '',
@@ -679,7 +690,62 @@ describe('DiscordChannel', () => {
       expect(opts.onMessage).toHaveBeenCalledWith(
         'dc:1234567890123456',
         expect.objectContaining({
-          content: '[File: report.pdf]',
+          content: `[document:base64:application/pdf:${pdfB64}]`,
+        }),
+      );
+    });
+
+    it('downloads text file and inlines content', async () => {
+      const textContent = 'Hello from a text file!';
+      mockFetchSuccess(new TextEncoder().encode(textContent));
+      const opts = createTestOpts();
+      const channel = new DiscordChannel('test-token', opts);
+      await channel.connect();
+
+      const attachments = new Map([
+        [
+          'att1',
+          {
+            name: 'notes.txt',
+            contentType: 'text/plain',
+            url: 'https://cdn.discord.com/notes.txt',
+          },
+        ],
+      ]);
+      const msg = createMessage({
+        content: '',
+        attachments,
+        guildName: 'Server',
+      });
+      await triggerMessage(msg);
+
+      expect(opts.onMessage).toHaveBeenCalledWith(
+        'dc:1234567890123456',
+        expect.objectContaining({
+          content: `[file:text:notes.txt:${textContent}:endfile]`,
+        }),
+      );
+    });
+
+    it('stores generic file attachment with placeholder', async () => {
+      const opts = createTestOpts();
+      const channel = new DiscordChannel('test-token', opts);
+      await channel.connect();
+
+      const attachments = new Map([
+        ['att1', { name: 'archive.zip', contentType: 'application/zip' }],
+      ]);
+      const msg = createMessage({
+        content: '',
+        attachments,
+        guildName: 'Server',
+      });
+      await triggerMessage(msg);
+
+      expect(opts.onMessage).toHaveBeenCalledWith(
+        'dc:1234567890123456',
+        expect.objectContaining({
+          content: '[File: archive.zip]',
         }),
       );
     });

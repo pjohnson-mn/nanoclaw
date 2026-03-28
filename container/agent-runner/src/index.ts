@@ -49,7 +49,8 @@ interface SessionsIndex {
 
 type ContentBlock =
   | { type: 'text'; text: string }
-  | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } };
+  | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
+  | { type: 'document'; source: { type: 'base64'; media_type: string; data: string } };
 
 interface SDKUserMessage {
   type: 'user';
@@ -58,34 +59,78 @@ interface SDKUserMessage {
   session_id: string;
 }
 
-const IMAGE_MARKER_RE = /\[image:base64:(image\/(?:jpeg|png|gif|webp)):([A-Za-z0-9+/=]+)\]/g;
+const BINARY_MARKER_RE = /\[(?:image|document):base64:([^:]+):([A-Za-z0-9+/=]+)\]/g;
+const FILE_TEXT_START = '[file:text:';
+const FILE_TEXT_END = ':endfile]';
 
 /**
- * Parse text for embedded base64 image markers and return multimodal content blocks.
- * Returns the original string if no markers are found (zero-cost for text-only messages).
+ * Parse text for embedded multimodal markers and return content blocks.
+ * Supports:
+ *   [image:base64:type:data]       → image content block
+ *   [document:base64:type:data]    → document content block (PDFs)
+ *   [file:text:name:...content...:endfile] → text content block with filename
+ * Returns the original string if no markers are found.
  */
 function parseMultimodalContent(text: string): string | ContentBlock[] {
-  if (!IMAGE_MARKER_RE.test(text)) return text;
-  IMAGE_MARKER_RE.lastIndex = 0;
+  const hasBinary = BINARY_MARKER_RE.test(text);
+  BINARY_MARKER_RE.lastIndex = 0;
+  const hasFileText = text.includes(FILE_TEXT_START);
+
+  if (!hasBinary && !hasFileText) return text;
 
   const blocks: ContentBlock[] = [];
-  let lastIndex = 0;
-  let match;
+  let pos = 0;
 
-  while ((match = IMAGE_MARKER_RE.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      const preceding = text.slice(lastIndex, match.index).trim();
+  while (pos < text.length) {
+    // Find next marker of any type
+    BINARY_MARKER_RE.lastIndex = pos;
+    const binaryMatch = BINARY_MARKER_RE.exec(text);
+    const fileTextIdx = hasFileText ? text.indexOf(FILE_TEXT_START, pos) : -1;
+
+    const binaryIdx = binaryMatch ? binaryMatch.index : -1;
+    const nextIdx =
+      binaryIdx >= 0 && (fileTextIdx < 0 || binaryIdx <= fileTextIdx)
+        ? binaryIdx
+        : fileTextIdx;
+
+    if (nextIdx < 0) break; // No more markers
+
+    // Add preceding text
+    if (nextIdx > pos) {
+      const preceding = text.slice(pos, nextIdx).trim();
       if (preceding) blocks.push({ type: 'text', text: preceding });
     }
-    blocks.push({
-      type: 'image',
-      source: { type: 'base64', media_type: match[1], data: match[2] },
-    });
-    lastIndex = match.index + match[0].length;
+
+    if (nextIdx === binaryIdx && binaryMatch) {
+      // Binary marker
+      const mediaType = binaryMatch[1];
+      const data = binaryMatch[2];
+      if (mediaType.startsWith('image/')) {
+        blocks.push({ type: 'image', source: { type: 'base64', media_type: mediaType, data } });
+      } else {
+        blocks.push({ type: 'document', source: { type: 'base64', media_type: mediaType, data } });
+      }
+      pos = binaryMatch.index + binaryMatch[0].length;
+    } else {
+      // File text marker: [file:text:name:...content...:endfile]
+      const nameStart = nextIdx + FILE_TEXT_START.length;
+      const nameEnd = text.indexOf(':', nameStart);
+      const endMarker = text.indexOf(FILE_TEXT_END, nameEnd + 1);
+      if (nameEnd < 0 || endMarker < 0) {
+        // Malformed — skip this character and continue
+        pos = nextIdx + 1;
+        continue;
+      }
+      const filename = text.slice(nameStart, nameEnd);
+      const fileContent = text.slice(nameEnd + 1, endMarker);
+      blocks.push({ type: 'text', text: `--- File: ${filename} ---\n${fileContent}\n--- End of file ---` });
+      pos = endMarker + FILE_TEXT_END.length;
+    }
   }
 
-  if (lastIndex < text.length) {
-    const trailing = text.slice(lastIndex).trim();
+  // Trailing text
+  if (pos < text.length) {
+    const trailing = text.slice(pos).trim();
     if (trailing) blocks.push({ type: 'text', text: trailing });
   }
 
