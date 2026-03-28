@@ -3,6 +3,19 @@
     "phils-outlook": {
       "type": "http",
       "url": "https://webhookn8n.pupaya.net/mcp/outlook"
+    }, 
+    "mealie-mcp-server": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/home/pjohnson/mealie-mcp-server",
+        "run",
+        "src/server.py"
+      ],
+      "env": {
+        "MEALIE_BASE_URL": "https://mealie.i.pupaya.net",
+        "MEALIE_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb25nX3Rva2VuIjp0cnVlLCJpZCI6IjExODY2NzczLWY4OTctNDRlOS05MGU1LWE0NDg3NjhkNGRkNSIsIm5hbWUiOiJuYW5vY2xhdyIsImludGVncmF0aW9uX2lkIjoiZ2VuZXJpYyIsImV4cCI6MTkzMjI2NDEzNH0.Y0m1SFtcT97VllLp5EY-Fi53Cr1O8FMuo7eR6hV5ixI"
+      }
     }
   }
 }

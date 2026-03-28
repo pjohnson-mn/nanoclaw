@@ -412,6 +412,7 @@ async function runQuery(
         'mcp__gcal-ruzan__*',
         'mcp__qdrant-mcp__*',
         'mcp__phils-outlook__*',
+        'mcp__mealie__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -450,6 +451,10 @@ async function runQuery(
         'phils-outlook': {
           type: 'http',
           url: 'https://webhookn8n.pupaya.net/mcp/outlook',
+        },
+        mealie: {
+          type: 'sse',
+          url: 'http://host.docker.internal:8091/sse',
         },
       },
       hooks: {

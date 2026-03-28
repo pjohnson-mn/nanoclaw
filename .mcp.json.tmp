@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "phils-outlook": {
+      "type": "http",
+      "url": "https://webhookn8n.pupaya.net/mcp/outlook"
+    },
+    "mealie-mcp-server": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/path/to/repo/src",
+        "run",
+        "server.py"
+      ],
+      "env": {
+        "MEALIE_BASE_URL": "https://your-mealie-instance.com",
+        "MEALIE_API_KEY": "your-mealie-api-key"
+      }
+    }
+  }
+}
