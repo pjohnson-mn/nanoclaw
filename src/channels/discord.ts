@@ -23,6 +23,29 @@ import {
   RegisteredGroup,
 } from '../types.js';
 
+const SUPPORTED_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+]);
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+async function downloadImageAsBase64(
+  url: string,
+  maxBytes: number,
+): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > maxBytes) return null;
+    return Buffer.from(buf).toString('base64');
+  } catch {
+    return null;
+  }
+}
+
 const slashCommands = [
   new SlashCommandBuilder()
     .setName('ask')
@@ -129,26 +152,32 @@ export class DiscordChannel implements Channel {
         }
       }
 
-      // Handle attachments — store placeholders so the agent knows something was sent
+      // Handle attachments — download supported images as base64, placeholder for rest
       if (message.attachments.size > 0) {
-        const attachmentDescriptions = [...message.attachments.values()].map(
-          (att) => {
-            const contentType = att.contentType || '';
-            if (contentType.startsWith('image/')) {
-              return `[Image: ${att.name || 'image'}]`;
-            } else if (contentType.startsWith('video/')) {
-              return `[Video: ${att.name || 'video'}]`;
-            } else if (contentType.startsWith('audio/')) {
-              return `[Audio: ${att.name || 'audio'}]`;
+        const parts: string[] = [];
+        for (const att of message.attachments.values()) {
+          const contentType = att.contentType || '';
+          if (SUPPORTED_IMAGE_TYPES.has(contentType) && att.url) {
+            const b64 = await downloadImageAsBase64(att.url, MAX_IMAGE_BYTES);
+            if (b64) {
+              parts.push(`[image:base64:${contentType}:${b64}]`);
             } else {
-              return `[File: ${att.name || 'file'}]`;
+              parts.push(
+                `[Image: ${att.name || 'image'} (download failed or too large)]`,
+              );
             }
-          },
-        );
+          } else if (contentType.startsWith('video/')) {
+            parts.push(`[Video: ${att.name || 'video'}]`);
+          } else if (contentType.startsWith('audio/')) {
+            parts.push(`[Audio: ${att.name || 'audio'}]`);
+          } else {
+            parts.push(`[File: ${att.name || 'file'}]`);
+          }
+        }
         if (content) {
-          content = `${content}\n${attachmentDescriptions.join('\n')}`;
+          content = `${content}\n${parts.join('\n')}`;
         } else {
-          content = attachmentDescriptions.join('\n');
+          content = parts.join('\n');
         }
       }
 

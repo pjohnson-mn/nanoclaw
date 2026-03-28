@@ -47,11 +47,49 @@ interface SessionsIndex {
   entries: SessionEntry[];
 }
 
+type ContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } };
+
 interface SDKUserMessage {
   type: 'user';
-  message: { role: 'user'; content: string };
+  message: { role: 'user'; content: string | ContentBlock[] };
   parent_tool_use_id: null;
   session_id: string;
+}
+
+const IMAGE_MARKER_RE = /\[image:base64:(image\/(?:jpeg|png|gif|webp)):([A-Za-z0-9+/=]+)\]/g;
+
+/**
+ * Parse text for embedded base64 image markers and return multimodal content blocks.
+ * Returns the original string if no markers are found (zero-cost for text-only messages).
+ */
+function parseMultimodalContent(text: string): string | ContentBlock[] {
+  if (!IMAGE_MARKER_RE.test(text)) return text;
+  IMAGE_MARKER_RE.lastIndex = 0;
+
+  const blocks: ContentBlock[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = IMAGE_MARKER_RE.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      const preceding = text.slice(lastIndex, match.index).trim();
+      if (preceding) blocks.push({ type: 'text', text: preceding });
+    }
+    blocks.push({
+      type: 'image',
+      source: { type: 'base64', media_type: match[1], data: match[2] },
+    });
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    const trailing = text.slice(lastIndex).trim();
+    if (trailing) blocks.push({ type: 'text', text: trailing });
+  }
+
+  return blocks.length > 0 ? blocks : text;
 }
 
 const IPC_INPUT_DIR = '/workspace/ipc/input';
@@ -70,7 +108,7 @@ class MessageStream {
   push(text: string): void {
     this.queue.push({
       type: 'user',
-      message: { role: 'user', content: text },
+      message: { role: 'user', content: parseMultimodalContent(text) },
       parent_tool_use_id: null,
       session_id: '',
     });
