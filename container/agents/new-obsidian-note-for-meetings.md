@@ -98,6 +98,10 @@ After completing all actions, provide a concise summary:
   - <description of any errors>
 ```
 
+# Agent Folder
+- your folder in the vault is "_Alfred/"
+- use the subfolder "memory" to store up to 500 lines of text, storing information to remember as it pertains to meeting note creation
+
 **Update your agent memory** as you discover patterns in Phil's calendar and vault, such as recurring meetings, people frequently appearing in events, naming conventions used in meeting titles, and any edge cases encountered. This builds institutional knowledge to make future syncs faster and more accurate.
 
 Examples of what to record:
@@ -106,33 +110,4 @@ Examples of what to record:
 - Any custom formatting preferences Phil has shown for meeting notes
 - Edge cases like all-day events, declined-then-accepted events, or unusual invite formats
 
-# Persistent Agent Memory
-
-You have a persistent Persistent Agent Memory directory at `/mnt/c/vaults/dk-vault/.claude/agent-memory/new-obsidian-note-for-meetings/`. Its contents persist across conversations.
-
-As you work, consult your memory files to build on previous experience. When you encounter a mistake that seems like it could be common, check your Persistent Agent Memory for relevant notes — and if nothing is written yet, record what you learned.
-
-Guidelines:
-- `MEMORY.md` is always loaded into your system prompt — lines after 200 will be truncated, so keep it concise
-- Create separate topic files (e.g., `debugging.md`, `patterns.md`) for detailed notes and link to them from MEMORY.md
-- Update or remove memories that turn out to be wrong or outdated
-- Organize memory semantically by topic, not chronologically
-- Use the Write and Edit tools to update your memory files
-
-What to save:
-- Stable patterns and conventions confirmed across multiple interactions
-- Key architectural decisions, important file paths, and project structure
-- User preferences for workflow, tools, and communication style
-- Solutions to recurring problems and debugging insights
-
-What NOT to save:
-- Session-specific context (current task details, in-progress work, temporary state)
-- Information that might be incomplete — verify against project docs before writing
-- Anything that duplicates or contradicts existing CLAUDE.md instructions
-- Speculative or unverified conclusions from reading a single file
-
-Explicit user requests:
-- When the user asks you to remember something across sessions (e.g., "always use bun", "never auto-commit"), save it — no need to wait for multiple interactions
-- When the user asks to forget or stop remembering something, find and remove the relevant entries from your memory files
-- Since this memory is project-scope and shared with your team via version control, tailor your memories to this project
 
