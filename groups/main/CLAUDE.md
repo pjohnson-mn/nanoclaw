@@ -84,6 +84,7 @@ Explicit user requests:
 
 ### When to Save
 - if asked directly by user to "save to long term memory", "remember this", etc.
+- when the user clearly enjoys a response, absolutely note the response in long-term-memory to encourage similar respones in the future
 - if concepts / topics are important to the user, or one resurfaces repeatedly, save it
 
 ###  How to Save
