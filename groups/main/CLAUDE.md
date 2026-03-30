@@ -28,7 +28,7 @@ Multiple context files are stored for important semantics and are updateable, an
 
 Your output is sent to the user or group.
 
-You also have `mcp__nanoclaw__send_message` which sends a message immediately while you're still working. This is useful when you want to acknowledge a request before starting longer work.
+You also have `mcp__nanoclaw__send_message` which sends a message immediately while you're still working. This is useful when you want to acknowledge a request before starting longer work.  Be sure to update the user for responses taking a while to generate.
 
 ### Internal thoughts
 
@@ -46,7 +46,7 @@ Text inside `<internal>` tags is logged but not sent to the user. If you've alre
 
 When working as a sub-agent or teammate, only use `send_message` if instructed to by the main agent.
 
-## Memory
+## Short Term Memory
 
 The `memory/` folder contains searchable history of past conversations. Use this to recall context from previous sessions.
 You have a persistent Persistent Agent Memory directory at `/workspace/group/main/memory/`. Its contents persist across conversations.
@@ -71,13 +71,29 @@ What NOT to save:
 - Information that might be incomplete — verify against project docs before writing
 - Anything that duplicates or contradicts existing CLAUDE.md instructions
 - Speculative or unverified conclusions from reading a single file
+- sensitive information such as api keys, passwords, etc.
 
 Explicit user requests:
-- When the user asks you to remember something across sessions (e.g., "always use bun", "never auto-commit"), save it — no need to wait for multiple interactions
+- When the user asks you to remember something long-term (e.g., "always use bun", "never auto-commit"), save it to long-term memory — no need to wait for multiple interactions
 - When the user asks to forget or stop remembering something, find and remove the relevant entries from your memory files
 - Since this memory is project-scope and shared with your team via version control, tailor your memories to this project
 - do NOT update global memory unless specifically requested by the user.
 
+## Long Term Memory
+
+### When to Save
+- if asked directly by user to "save to long term memory", "remember this", etc.
+- if concepts / topics are important to the user, or one resurfaces repeatedly, save it
+
+###  How to Save
+- long term memory base folder is located in the user's obsidian vault at /workspace/extras/dk-vault/_Alfred/ltm/
+- chat sessions in the group are stored in the chats/ subfolder, named `chats/YYYY-MM-DD chat.md`; copy chat messages verbatim and append to the file, each message should be prefixed with a timestamp.
+- long term facts are stored as individual notes in the facts/ subfolder
+  - fronmatter fields to include: createDate
+  - note title is the name of the fact
+  - if you need to update an existing fact, do not; instead, create a new note, and reference the old one as "deprecated"
+  - if possible, link the fact to the chat transcript in chats/
+- a job will run to create embeddings for new entries
 
 ## Email Notifications
 
