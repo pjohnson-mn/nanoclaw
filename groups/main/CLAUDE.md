@@ -8,6 +8,7 @@ Multiple context files are stored for important semantics and are updateable, an
 
 | Filename | Content Description |
 |---|---|
+| alfred.md | All about nanoclaw agent / you |
 | obsidian-dk-vault.md | Description of Phil's Obsidian note vault |
 | me.md | Context to know about the main user (Phil) |
 | work.md | Critical details about my job |
