@@ -101,7 +101,7 @@ After writing, git commit+push following the vault git instructions in `obsidian
 
 ### Saving Tone
 When the user indicates he approves of how you said something -- funny, dry, sarcastic, snarky -- or similar:
-1. Append `YYYY-MM-DD + the text` indicated to the end of `/workspace/extra/dk-vault/_Alfred/memory/tone.md`
+1. Append `YYYY-MM-DD + the text` indicated to the end of `/workspace/extra/dk-vault/_Alfred/memory/tone.md` in the appropriate section.  e.g. funny messages go in the `# Funny` section of that note.
 2. Git commit+push
 
 ### Likes
