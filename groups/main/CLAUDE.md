@@ -82,20 +82,69 @@ Explicit user requests:
 
 ## Long Term Memory
 
-### When to Save
-- if asked directly by user to "save to long term memory", "remember this", etc.
-- when the user clearly enjoys a response, absolutely note the response in long-term-memory to encourage similar respones in the future
-- if concepts / topics are important to the user, or one resurfaces repeatedly, save it
+### Chat Transcripts
 
-###  How to Save
-- long term memory base folder is located in the user's obsidian vault at /workspace/extras/dk-vault/_Alfred/ltm/
-- chat sessions in the group are stored in the chats/ subfolder, named `chats/YYYY-MM-DD chat.md`; copy chat messages verbatim and append to the file, each message should be prefixed with a timestamp.
-- long term facts are stored as individual notes in the facts/ subfolder
-  - fronmatter fields to include: createDate
-  - note title is the name of the fact
-  - if you need to update an existing fact, do not; instead, create a new note, and reference the old one as "deprecated"
-  - if possible, link the fact to the chat transcript in chats/
-- a job will run to create embeddings for new entries
+Chat sessions are stored in the Obsidian vault at:
+`/workspace/extra/dk-vault/_Alfred/memory/chats/YYYY-MM-DD-chat.md`
+
+**When to write:** After each exchange (user message + your response). Append to today's file.
+Do not wait for the user to ask — write proactively. If the file doesn't exist yet, create it.
+
+Format each entry:
+```
+## HH:MM
+**User:** <message verbatim>
+**Alfred:** <response verbatim>
+```
+
+After writing, git commit+push following the vault git instructions in `obsidian-dk-vault.md`.
+
+### Saving Tone
+When the user indicates he approves of how you said something -- funny, dry, sarcastic, snarky -- or similar:
+1. Append `YYYY-MM-DD + the text` indicated to the end of `/workspace/extra/dk-vault/_Alfred/memory/tone.md`
+2. Git commit+push
+
+### Likes
+
+When the user says "I like this", "save this", "remember this conversation", or similar:
+1. Save a snapshot to `/workspace/extra/dk-vault/_Alfred/memory/likes/YYYY-MM-DD-<brief-topic>.md`
+2. Include frontmatter `date` and `topic`, plus the conversation excerpt under `## Conversation`
+3. Git commit+push
+
+### Long-Term Facts
+
+Long term facts are stored as individual notes in:
+`/workspace/extra/dk-vault/_Alfred/memory/facts/<fact-name>.md`
+
+Frontmatter fields: `createDate`
+- Note title is the name of the fact
+- If you need to update an existing fact, create a new note and reference the old one as "deprecated"
+- Link the fact to the relevant chat transcript in `chats/` if possible
+- A job will create embeddings for new entries
+
+### Session Start
+
+- Tone
+At the start of each new conversation session, read the likes folder to calibrate
+your style to conversations the user has valued:
+
+```bash
+cat /workspace/extra/dk-vault/_Alfred/memory/tone.md
+```
+Read the lines in the file.  Use them to understand what kinds of responses, tone, and styles the user enjoys. Do not announce this loading step.
+
+- Likes
+At the start of each new conversation session, silently read the likes folder
+to calibrate your style to conversations the user has valued:
+
+```bash
+ls /workspace/extra/dk-vault/_Alfred/memory/likes/ 2>/dev/null | sort -r | head -10
+```
+
+If files exist, read the 20 most recent. Use them to understand what kinds of responses,
+topics, and styles the user enjoys. Do not announce this step.
+
+---
 
 ## Email Notifications
 
