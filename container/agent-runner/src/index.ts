@@ -492,6 +492,7 @@ async function runQuery(
         'NotebookEdit',
         'mcp__nanoclaw__*',
         'mcp__gmail-ruzan__*',
+        'mcp__gmail-phil__*',
         'mcp__gcal-ruzan__*',
         'mcp__qdrant-mcp__*',
         'mcp__phils-outlook__*',
@@ -517,6 +518,14 @@ async function runQuery(
           env: {
             GMAIL_OAUTH_PATH: '/home/node/.gmail-mcp/ruzan/gcp-oauth.keys.json',
             GMAIL_CREDENTIALS_PATH: '/home/node/.gmail-mcp/ruzan/credentials.json',
+          },
+        },
+        'gmail-phil': {
+          command: 'npx',
+          args: ['-y', '@gongrzhe/server-gmail-autoauth-mcp'],
+          env: {
+            GMAIL_OAUTH_PATH: '/home/node/.gmail-mcp/phil/gcp-oauth.keys.json',
+            GMAIL_CREDENTIALS_PATH: '/home/node/.gmail-mcp/phil/credentials.json',
           },
         },
         'gcal-ruzan': {

@@ -5,7 +5,7 @@ This context is about the email and calendar services Phil uses regularly.
 Use the Email Account Tools section for a list of my email addresses and their domain.
 
 # Email Account Tools
-| Name | Platform | Use | My Name | Email Address | 
+| Name | Platform | Use | The Name I Go By in This Account | Email Address | 
 |---|---|---|---|---|
 | ruzan-gmail | Gmail | Zen priest communication | Ruzan | ruzanj.mn@gmail.com | Emails and interactions in my capacity as a Zen priest |
 | phil-gmail | Gmail | Personal email | Phil | philj.mn@gmail.com | Personal account used the most |

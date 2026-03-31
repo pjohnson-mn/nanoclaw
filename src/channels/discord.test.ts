@@ -146,7 +146,10 @@ vi.stubGlobal('fetch', mockFetch);
 
 function mockFetchSuccess(data?: Uint8Array) {
   const bytes = data ?? new TextEncoder().encode('fake-image-data');
-  const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  const ab = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  );
   mockFetch.mockResolvedValueOnce({
     ok: true,
     arrayBuffer: () => Promise.resolve(ab),
