@@ -341,8 +341,10 @@ export async function runContainerAgent(
   const extraEnv: string[] = [];
 
   if (group.folder.startsWith('discord_')) {
-    const { PLAUD_TOKEN } = readEnvFile(['PLAUD_TOKEN']);
+    const { PLAUD_TOKEN, SNYK_TOKEN, SNYK_ORG_ID } = readEnvFile(['PLAUD_TOKEN', 'SNYK_TOKEN', 'SNYK_ORG_ID']);
     if (PLAUD_TOKEN) extraEnv.push('-e', `PLAUD_TOKEN=${PLAUD_TOKEN}`);
+    if (SNYK_TOKEN) extraEnv.push('-e', `SNYK_TOKEN=${SNYK_TOKEN}`);
+    if (SNYK_ORG_ID) extraEnv.push('-e', `SNYK_ORG_ID=${SNYK_ORG_ID}`);
   }
 
   // Mealie recipe manager — available to all groups
