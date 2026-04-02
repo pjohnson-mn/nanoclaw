@@ -14,12 +14,13 @@ This skill reads Code (SAST) vulnerability scan results from a Snyk instance via
 
 ## Authentication
 
-The skill needs a **Snyk API token** and an **organization ID**. It checks for credentials in this order:
+The skill needs a **Snyk API token** and an **organization ID**. It resolves credentials in this order:
 
 1. Environment variables: `SNYK_TOKEN` and `SNYK_ORG_ID`
-2. User-provided values passed as arguments to the script
+2. `--token` / `--org-id` flags passed to the script
+3. If `SNYK_ORG_ID` is not set and `--org-id` is not passed, the script fetches all orgs for the token and shows an **interactive numbered picker** (only when running in an interactive terminal). If there is exactly one org, it is selected automatically.
 
-If neither is available, ask the user to provide them. Never log or echo the token in output.
+If the token is not available, ask the user to provide it. Never log or echo the token in output.
 
 ## How to use
 
@@ -27,11 +28,17 @@ The skill provides a Python script at `scripts/snyk_client.py` that wraps the Sn
 
 ### Available commands
 
+**List all Snyk organizations the token can access:**
+```bash
+python scripts/snyk_client.py list-orgs
+```
+Returns org IDs, names, and slugs. Useful for discovering the correct `SNYK_ORG_ID`. This command does not require `--org-id`.
+
 **List projects in the org:**
 ```bash
 python scripts/snyk_client.py list-projects [--type code] [--name-filter <substring>]
 ```
-Returns project IDs, names, and types. Use `--type code` to show only SAST-scanned projects or omit for all results [DEFAULT]. Use `--name-filter` to search by project name.
+Returns project IDs, names, and types. Use `--type code` to show only SAST-scanned projects, only include if specifically asked. Use `--name-filter` to search by project name.
 
 **Get code (SAST) issues for a specific project:**
 ```bash

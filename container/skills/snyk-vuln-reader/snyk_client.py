@@ -3,6 +3,7 @@
 Snyk REST API client for reading Code (SAST) vulnerability scan results.
 
 Usage:
+    python snyk_client.py list-orgs
     python snyk_client.py list-projects [--type code] [--name-filter <str>]
     python snyk_client.py get-issues --project-id <ID> [--severity critical,high] [--limit 100]
     python snyk_client.py get-issue-detail --issue-id <ID> --project-id <ID>
@@ -10,6 +11,7 @@ Usage:
 
 All commands accept:  --token <TOKEN>  --org-id <ORG_ID>
 Falls back to SNYK_TOKEN and SNYK_ORG_ID environment variables.
+If --org-id is omitted and SNYK_ORG_ID is not set, an interactive org picker is shown.
 """
 
 import argparse
@@ -88,6 +90,64 @@ def _paginate(base_url: str, token: str, limit: int = DEFAULT_LIMIT) -> list:
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
+
+def list_orgs_cmd(token: str):
+    """Print all orgs accessible with this token."""
+    params = {"version": REST_VERSION, "limit": "100"}
+    url = f"{API_BASE}/rest/orgs?{urlencode(params)}"
+    orgs = _paginate(url, token, limit=500)
+    results = []
+    for o in orgs:
+        attrs = o.get("attributes", {})
+        results.append({
+            "id": o.get("id"),
+            "name": attrs.get("name", ""),
+            "slug": attrs.get("slug", ""),
+            "group_id": (o.get("relationships") or {}).get("group", {}).get("data", {}).get("id"),
+        })
+    print(json.dumps({"count": len(results), "orgs": results}, indent=2))
+
+
+def _fetch_orgs(token: str) -> list:
+    """Return raw org objects for the given token."""
+    params = {"version": REST_VERSION, "limit": "100"}
+    url = f"{API_BASE}/rest/orgs?{urlencode(params)}"
+    return _paginate(url, token, limit=500)
+
+
+def _pick_org(token: str) -> str:
+    """Interactively prompt the user to select an org. Returns the org ID."""
+    orgs = _fetch_orgs(token)
+    if not orgs:
+        print(json.dumps({"error": True, "detail": "No organizations found for this token."}), file=sys.stderr)
+        sys.exit(1)
+
+    if len(orgs) == 1:
+        org_id = orgs[0].get("id", "")
+        name = orgs[0].get("attributes", {}).get("name", org_id)
+        print(f"Using organization: {name} ({org_id})", file=sys.stderr)
+        return org_id
+
+    print("Available organizations:", file=sys.stderr)
+    for i, org in enumerate(orgs, 1):
+        attrs = org.get("attributes", {})
+        name = attrs.get("name", "unknown")
+        slug = attrs.get("slug", "")
+        print(f"  {i}. {name}  [{slug}]", file=sys.stderr)
+
+    while True:
+        try:
+            raw = input(f"Select organization [1-{len(orgs)}]: ").strip()
+            idx = int(raw) - 1
+            if 0 <= idx < len(orgs):
+                return orgs[idx].get("id", "")
+            print(f"Enter a number between 1 and {len(orgs)}.", file=sys.stderr)
+        except ValueError:
+            print("Invalid input.", file=sys.stderr)
+        except EOFError:
+            print(json.dumps({"error": True, "detail": "No organization selected."}), file=sys.stderr)
+            sys.exit(1)
+
 
 def list_projects(token: str, org_id: str, project_type: str | None, name_filter: str | None):
     """List projects in the organization, optionally filtered."""
@@ -195,6 +255,7 @@ def summary(token: str, org_id: str, severities: list[str] | None, issue_type: s
     params = {"version": REST_VERSION, "limit": "100"}
     if issue_type:
         params["types"] = issue_type
+
     url = f"{API_BASE}/rest/orgs/{quote(org_id)}/projects?{urlencode(params)}"
     projects = _paginate(url, token, limit=500)
 
@@ -270,6 +331,9 @@ def main():
 
     sub = parser.add_subparsers(dest="command", required=True)
 
+    # list-orgs  (no --org-id needed)
+    sub.add_parser("list-orgs", help="List all Snyk organizations accessible with this token")
+
     # list-projects
     lp = sub.add_parser("list-projects", help="List projects in the org")
     lp.add_argument("--type", dest="project_type", default=None, help="Filter by project type (e.g. 'sast', 'code')")
@@ -299,9 +363,18 @@ def main():
     if not args.token:
         print(json.dumps({"error": True, "detail": "No Snyk API token. Set SNYK_TOKEN env var or pass --token."}))
         sys.exit(1)
+
+    # list-orgs doesn't need an org ID
+    if args.command == "list-orgs":
+        list_orgs_cmd(args.token)
+        return
+
     if not args.org_id:
-        print(json.dumps({"error": True, "detail": "No Snyk org ID. Set SNYK_ORG_ID env var or pass --org-id."}))
-        sys.exit(1)
+        if sys.stdin.isatty():
+            args.org_id = _pick_org(args.token)
+        else:
+            print(json.dumps({"error": True, "detail": "No Snyk org ID. Set SNYK_ORG_ID env var, pass --org-id, or run interactively to pick one."}))
+            sys.exit(1)
 
     sevs = [s.strip() for s in args.severity.split(",")] if getattr(args, "severity", None) else None
 

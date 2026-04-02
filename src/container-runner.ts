@@ -341,7 +341,11 @@ export async function runContainerAgent(
   const extraEnv: string[] = [];
 
   if (group.folder.startsWith('discord_')) {
-    const { PLAUD_TOKEN, SNYK_TOKEN, SNYK_ORG_ID } = readEnvFile(['PLAUD_TOKEN', 'SNYK_TOKEN', 'SNYK_ORG_ID']);
+    const { PLAUD_TOKEN, SNYK_TOKEN, SNYK_ORG_ID } = readEnvFile([
+      'PLAUD_TOKEN',
+      'SNYK_TOKEN',
+      'SNYK_ORG_ID',
+    ]);
     if (PLAUD_TOKEN) extraEnv.push('-e', `PLAUD_TOKEN=${PLAUD_TOKEN}`);
     if (SNYK_TOKEN) extraEnv.push('-e', `SNYK_TOKEN=${SNYK_TOKEN}`);
     if (SNYK_ORG_ID) extraEnv.push('-e', `SNYK_ORG_ID=${SNYK_ORG_ID}`);
@@ -350,6 +354,27 @@ export async function runContainerAgent(
   // Mealie recipe manager — available to all groups
   const { MEALIE_API_KEY } = readEnvFile(['MEALIE_API_KEY']);
   if (MEALIE_API_KEY) extraEnv.push('-e', `MEALIE_API_KEY=${MEALIE_API_KEY}`);
+
+  // LiteLLM / Foundry SDK behavior flags and optional model overrides
+  const {
+    CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS,
+    ANTHROPIC_DEFAULT_OPUS_MODEL,
+    ANTHROPIC_DEFAULT_SONNET_MODEL,
+    ANTHROPIC_DEFAULT_HAIKU_MODEL,
+  } = readEnvFile([
+    'CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS',
+    'ANTHROPIC_DEFAULT_OPUS_MODEL',
+    'ANTHROPIC_DEFAULT_SONNET_MODEL',
+    'ANTHROPIC_DEFAULT_HAIKU_MODEL',
+  ]);
+  if (CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS)
+    extraEnv.push('-e', `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=${CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS}`);
+  if (ANTHROPIC_DEFAULT_OPUS_MODEL)
+    extraEnv.push('-e', `ANTHROPIC_DEFAULT_OPUS_MODEL=${ANTHROPIC_DEFAULT_OPUS_MODEL}`);
+  if (ANTHROPIC_DEFAULT_SONNET_MODEL)
+    extraEnv.push('-e', `ANTHROPIC_DEFAULT_SONNET_MODEL=${ANTHROPIC_DEFAULT_SONNET_MODEL}`);
+  if (ANTHROPIC_DEFAULT_HAIKU_MODEL)
+    extraEnv.push('-e', `ANTHROPIC_DEFAULT_HAIKU_MODEL=${ANTHROPIC_DEFAULT_HAIKU_MODEL}`);
 
   if (extraEnv.length) {
     containerArgs.splice(containerArgs.length - 1, 0, ...extraEnv);
