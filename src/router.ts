@@ -73,7 +73,10 @@ export function resolveOutboundFiles(
   try {
     groupDir = resolveGroupFolderPath(groupFolder);
   } catch (err) {
-    logger.warn({ groupFolder, err }, 'resolveOutboundFiles: invalid group folder');
+    logger.warn(
+      { groupFolder, err },
+      'resolveOutboundFiles: invalid group folder',
+    );
     return { cleanText: text, files: [] };
   }
 
@@ -81,7 +84,10 @@ export function resolveOutboundFiles(
     .replace(SEND_FILE_RE, (_, containerPath: string) => {
       const prefix = '/workspace/group/';
       if (!containerPath.startsWith(prefix)) {
-        logger.warn({ containerPath }, 'send-file: path must start with /workspace/group/');
+        logger.warn(
+          { containerPath },
+          'send-file: path must start with /workspace/group/',
+        );
         return '';
       }
       const relative = containerPath.slice(prefix.length);
@@ -89,13 +95,19 @@ export function resolveOutboundFiles(
       // Security: ensure path stays within group dir
       const rel = path.relative(groupDir, hostPath);
       if (rel.startsWith('..') || path.isAbsolute(rel)) {
-        logger.warn({ containerPath, hostPath }, 'send-file: path escapes group folder, blocked');
+        logger.warn(
+          { containerPath, hostPath },
+          'send-file: path escapes group folder, blocked',
+        );
         return '';
       }
       try {
         const buffer = fs.readFileSync(hostPath);
         files.push({ name: path.basename(hostPath), buffer });
-        logger.info({ hostPath, size: buffer.length }, 'send-file: resolved attachment');
+        logger.info(
+          { hostPath, size: buffer.length },
+          'send-file: resolved attachment',
+        );
       } catch (err) {
         logger.warn({ hostPath, err }, 'send-file: could not read file');
       }

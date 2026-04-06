@@ -490,7 +490,11 @@ export class DiscordChannel implements Channel {
     });
   }
 
-  async sendMessage(jid: string, text: string, files?: OutboundFile[]): Promise<void> {
+  async sendMessage(
+    jid: string,
+    text: string,
+    files?: OutboundFile[],
+  ): Promise<void> {
     // Resolve any pending voice reply before sending to the text channel
     const voiceResolve = this.pendingVoiceReplies.get(jid);
     if (voiceResolve) {
@@ -526,9 +530,12 @@ export class DiscordChannel implements Channel {
       // Build attachment list from two sources:
       // 1. OutboundFile[] passed in from resolveOutboundFiles (path-based, preferred)
       // 2. [send-attachment:name:base64] markers embedded in text (fallback for small inline files)
-      const { cleanText, attachments: inlineAttachments } = parseAttachments(text);
+      const { cleanText, attachments: inlineAttachments } =
+        parseAttachments(text);
       const allAttachments: AttachmentBuilder[] = [
-        ...(files ?? []).map((f) => new AttachmentBuilder(f.buffer, { name: f.name })),
+        ...(files ?? []).map(
+          (f) => new AttachmentBuilder(f.buffer, { name: f.name }),
+        ),
         ...inlineAttachments,
       ];
 
@@ -550,7 +557,10 @@ export class DiscordChannel implements Channel {
         }
         for (let i = 0; i < chunks.length; i++) {
           if (i === chunks.length - 1 && allAttachments.length > 0) {
-            await textChannel.send({ content: chunks[i], files: allAttachments });
+            await textChannel.send({
+              content: chunks[i],
+              files: allAttachments,
+            });
           } else {
             await textChannel.send(chunks[i]);
           }

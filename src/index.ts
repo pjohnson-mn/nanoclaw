@@ -52,7 +52,12 @@ import {
 import { GroupQueue } from './group-queue.js';
 import { resolveGroupFolderPath } from './group-folder.js';
 import { startIpcWatcher } from './ipc.js';
-import { findChannel, formatMessages, formatOutbound, resolveOutboundFiles } from './router.js';
+import {
+  findChannel,
+  formatMessages,
+  formatOutbound,
+  resolveOutboundFiles,
+} from './router.js';
 import { ChannelType } from './text-styles.js';
 import {
   restoreRemoteControl,
@@ -314,11 +319,20 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
           ? result.result
           : JSON.stringify(result.result);
       // Strip <internal>...</internal> blocks — agent uses these for internal reasoning
-      const stripped = raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim();
+      const stripped = raw
+        .replace(/<internal>[\s\S]*?<\/internal>/g, '')
+        .trim();
       logger.info({ group: group.name }, `Agent output: ${raw.length} chars`);
       if (stripped) {
-        const { cleanText, files } = resolveOutboundFiles(stripped, group.folder);
-        await channel.sendMessage(chatJid, cleanText, files.length > 0 ? files : undefined);
+        const { cleanText, files } = resolveOutboundFiles(
+          stripped,
+          group.folder,
+        );
+        await channel.sendMessage(
+          chatJid,
+          cleanText,
+          files.length > 0 ? files : undefined,
+        );
         outputSentToUser = true;
       }
       // Only reset idle timer on actual results, not session-update markers (result: null)
@@ -776,7 +790,11 @@ async function main(): Promise<void> {
         ? resolveOutboundFiles(text, groupFolder)
         : { cleanText: text, files: [] };
       if (cleanText || files.length > 0) {
-        await channel.sendMessage(jid, cleanText, files.length > 0 ? files : undefined);
+        await channel.sendMessage(
+          jid,
+          cleanText,
+          files.length > 0 ? files : undefined,
+        );
       }
     },
   });
@@ -790,7 +808,11 @@ async function main(): Promise<void> {
         ? resolveOutboundFiles(text, groupFolder)
         : { cleanText: text, files: [] };
       if (!cleanText && files.length === 0) return Promise.resolve();
-      return channel.sendMessage(jid, cleanText, files.length > 0 ? files : undefined);
+      return channel.sendMessage(
+        jid,
+        cleanText,
+        files.length > 0 ? files : undefined,
+      );
     },
     registeredGroups: () => registeredGroups,
     registerGroup,
