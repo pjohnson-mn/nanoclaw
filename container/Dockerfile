@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     libxshmfence1 \
     curl \
     git \
+    pandoc \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Chromium path for agent-browser
@@ -33,6 +34,10 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 # Pre-installing MCP servers avoids concurrent npx download races at runtime
 # when multiple MCP servers using the same package start simultaneously.
 RUN npm install -g agent-browser @anthropic-ai/claude-code @gongrzhe/server-gmail-autoauth-mcp
+
+# Copy utility binaries
+COPY utils/ /usr/local/bin/
+RUN chmod +x /usr/local/bin/*
 
 # Create app directory
 WORKDIR /app

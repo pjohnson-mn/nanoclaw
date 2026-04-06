@@ -496,9 +496,12 @@ async function runQuery(
         'mcp__gmail-ruzan__*',
         'mcp__gmail-phil__*',
         'mcp__gcal-ruzan__*',
+        'mcp__gdrive-phil__*',
+        'mcp__gdrive-ruzan__*',
         'mcp__qdrant-mcp__*',
         'mcp__phils-outlook__*',
         'mcp__mealie__*',
+        'mcp__home-assistant__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -538,6 +541,22 @@ async function runQuery(
             GOOGLE_CALENDAR_MCP_TOKEN_PATH: '/home/node/.gcal-mcp/tokens.json',
           },
         },
+        'gdrive-phil': {
+          command: 'npx',
+          args: ['-y', '@modelcontextprotocol/server-gdrive'],
+          env: {
+            GDRIVE_OAUTH_PATH: '/home/node/.gdrive-mcp/phil/gcp-oauth.keys.json',
+            GDRIVE_CREDENTIALS_PATH: '/home/node/.gdrive-mcp/phil/credentials.json',
+          },
+        },
+        'gdrive-ruzan': {
+          command: 'npx',
+          args: ['-y', '@modelcontextprotocol/server-gdrive'],
+          env: {
+            GDRIVE_OAUTH_PATH: '/home/node/.gdrive-mcp/ruzan/gcp-oauth.keys.json',
+            GDRIVE_CREDENTIALS_PATH: '/home/node/.gdrive-mcp/ruzan/credentials.json',
+          },
+        },
         'qdrant-mcp': {
           type: 'sse',
           url: 'http://pi1.homelab:8000/sse',
@@ -549,6 +568,10 @@ async function runQuery(
         mealie: {
           type: 'sse',
           url: 'http://host.docker.internal:8091/sse',
+        },
+        'home-assistant': {
+          type: 'http',
+          url: 'http://192.168.50.41:9583/private_AS853lSJn7H0K4QS4EG6sQ',
         },
       },
       hooks: {

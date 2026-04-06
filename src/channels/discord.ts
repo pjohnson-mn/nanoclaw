@@ -1,4 +1,5 @@
 import {
+  AttachmentBuilder,
   Client,
   Events,
   GatewayIntentBits,
@@ -74,6 +75,30 @@ function extractXlsxText(buf: Buffer): string | null {
 
 function fileTextMarker(filename: string, content: string): string {
   return `[file:text:${filename}:${content}:endfile]`;
+}
+
+// Marker format: [send-attachment:filename.ext:base64data]
+// The agent emits this in its response text to attach a file to the Discord message.
+const SEND_ATTACHMENT_RE =
+  /\[send-attachment:([^:\]]+):([A-Za-z0-9+/=\n]+)\]/g;
+
+function parseAttachments(text: string): {
+  cleanText: string;
+  attachments: AttachmentBuilder[];
+} {
+  const attachments: AttachmentBuilder[] = [];
+  const cleanText = text
+    .replace(SEND_ATTACHMENT_RE, (_, name: string, b64: string) => {
+      try {
+        const buf = Buffer.from(b64.replace(/\s/g, ''), 'base64');
+        attachments.push(new AttachmentBuilder(buf, { name }));
+      } catch {
+        // malformed base64 — skip silently
+      }
+      return '';
+    })
+    .trim();
+  return { cleanText, attachments };
 }
 
 const slashCommands = [
@@ -498,16 +523,37 @@ export class DiscordChannel implements Channel {
 
       const textChannel = channel as TextChannel;
 
+      // Extract any [send-attachment:name:base64] markers before splitting
+      const { cleanText, attachments } = parseAttachments(text);
+
       // Discord has a 2000 character limit per message — split if needed
       const MAX_LENGTH = 2000;
-      if (text.length <= MAX_LENGTH) {
-        await textChannel.send(text);
+      if (cleanText.length <= MAX_LENGTH) {
+        if (attachments.length > 0) {
+          await textChannel.send({
+            content: cleanText || undefined,
+            files: attachments,
+          });
+        } else {
+          await textChannel.send(cleanText);
+        }
       } else {
-        for (let i = 0; i < text.length; i += MAX_LENGTH) {
-          await textChannel.send(text.slice(i, i + MAX_LENGTH));
+        const chunks: string[] = [];
+        for (let i = 0; i < cleanText.length; i += MAX_LENGTH) {
+          chunks.push(cleanText.slice(i, i + MAX_LENGTH));
+        }
+        for (let i = 0; i < chunks.length; i++) {
+          if (i === chunks.length - 1 && attachments.length > 0) {
+            await textChannel.send({ content: chunks[i], files: attachments });
+          } else {
+            await textChannel.send(chunks[i]);
+          }
         }
       }
-      logger.info({ jid, length: text.length }, 'Discord message sent');
+      logger.info(
+        { jid, length: text.length, attachmentCount: attachments.length },
+        'Discord message sent',
+      );
     } catch (err) {
       logger.error({ jid, err }, 'Failed to send Discord message');
     }

@@ -203,6 +203,16 @@ function buildVolumeMounts(
     });
   }
 
+  // Google Drive MCP credentials and tokens
+  const gdriveDir = path.join(homeDir, '.gdrive-mcp');
+  if (fs.existsSync(gdriveDir)) {
+    mounts.push({
+      hostPath: gdriveDir,
+      containerPath: '/home/node/.gdrive-mcp',
+      readonly: false, // MCP may need to refresh OAuth tokens
+    });
+  }
+
   // Per-group IPC namespace: each group gets its own IPC directory
   // This prevents cross-group privilege escalation via IPC
   const groupIpcDir = resolveGroupIpcPath(group.folder);
@@ -368,13 +378,25 @@ export async function runContainerAgent(
     'ANTHROPIC_DEFAULT_HAIKU_MODEL',
   ]);
   if (CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS)
-    extraEnv.push('-e', `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=${CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS}`);
+    extraEnv.push(
+      '-e',
+      `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=${CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS}`,
+    );
   if (ANTHROPIC_DEFAULT_OPUS_MODEL)
-    extraEnv.push('-e', `ANTHROPIC_DEFAULT_OPUS_MODEL=${ANTHROPIC_DEFAULT_OPUS_MODEL}`);
+    extraEnv.push(
+      '-e',
+      `ANTHROPIC_DEFAULT_OPUS_MODEL=${ANTHROPIC_DEFAULT_OPUS_MODEL}`,
+    );
   if (ANTHROPIC_DEFAULT_SONNET_MODEL)
-    extraEnv.push('-e', `ANTHROPIC_DEFAULT_SONNET_MODEL=${ANTHROPIC_DEFAULT_SONNET_MODEL}`);
+    extraEnv.push(
+      '-e',
+      `ANTHROPIC_DEFAULT_SONNET_MODEL=${ANTHROPIC_DEFAULT_SONNET_MODEL}`,
+    );
   if (ANTHROPIC_DEFAULT_HAIKU_MODEL)
-    extraEnv.push('-e', `ANTHROPIC_DEFAULT_HAIKU_MODEL=${ANTHROPIC_DEFAULT_HAIKU_MODEL}`);
+    extraEnv.push(
+      '-e',
+      `ANTHROPIC_DEFAULT_HAIKU_MODEL=${ANTHROPIC_DEFAULT_HAIKU_MODEL}`,
+    );
 
   if (extraEnv.length) {
     containerArgs.splice(containerArgs.length - 1, 0, ...extraEnv);

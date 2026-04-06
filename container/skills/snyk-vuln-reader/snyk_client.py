@@ -200,12 +200,17 @@ def get_issues(token: str, org_id: str, project_id: str, severities: list[str] |
         for coord in coords:
             reps = coord.get("representations", [])
             for rep in reps:
-                ri = rep.get("resourcePath", "")
-                if ri:
+                src = rep.get("sourceLocation", {})
+                file_name = src.get("file", "")
+                if file_name:
+                    region = src.get("region", {})
                     file_paths.append({
-                        "path": ri,
-                        "start_line": rep.get("region", {}).get("start", {}).get("line"),
-                        "end_line": rep.get("region", {}).get("end", {}).get("line"),
+                        "path": file_name,
+                        "start_line": region.get("start", {}).get("line"),
+                        "end_line": region.get("end", {}).get("line"),
+                        "start_col": region.get("start", {}).get("column"),
+                        "end_col": region.get("end", {}).get("column"),
+                        "commit": src.get("commit_id", ""),
                     })
 
         problems = attrs.get("problems", [])
