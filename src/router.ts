@@ -1,6 +1,11 @@
-import { Channel, NewMessage } from './types.js';
+import fs from 'fs';
+import path from 'path';
+
+import { Channel, NewMessage, OutboundFile } from './types.js';
 import { formatLocalTime } from './timezone.js';
 import { parseTextStyles, ChannelType } from './text-styles.js';
+import { resolveGroupFolderPath } from './group-folder.js';
+import { logger } from './logger.js';
 
 export function escapeXml(s: string): string {
   if (!s) return '';
@@ -50,4 +55,53 @@ export function findChannel(
   jid: string,
 ): Channel | undefined {
   return channels.find((c) => c.ownsJid(jid));
+}
+
+// Marker: [send-file:/workspace/group/path/to/file.ext]
+// The agent writes a file to /workspace/group/ then references it with this marker.
+// NanoClaw resolves the container path to the host group folder and reads the file.
+const SEND_FILE_RE = /\[send-file:([^\]]+)\]/g;
+
+export function resolveOutboundFiles(
+  text: string,
+  groupFolder: string,
+): { cleanText: string; files: OutboundFile[] } {
+  if (!text.includes('[send-file:')) return { cleanText: text, files: [] };
+
+  const files: OutboundFile[] = [];
+  let groupDir: string;
+  try {
+    groupDir = resolveGroupFolderPath(groupFolder);
+  } catch (err) {
+    logger.warn({ groupFolder, err }, 'resolveOutboundFiles: invalid group folder');
+    return { cleanText: text, files: [] };
+  }
+
+  const cleanText = text
+    .replace(SEND_FILE_RE, (_, containerPath: string) => {
+      const prefix = '/workspace/group/';
+      if (!containerPath.startsWith(prefix)) {
+        logger.warn({ containerPath }, 'send-file: path must start with /workspace/group/');
+        return '';
+      }
+      const relative = containerPath.slice(prefix.length);
+      const hostPath = path.resolve(groupDir, relative);
+      // Security: ensure path stays within group dir
+      const rel = path.relative(groupDir, hostPath);
+      if (rel.startsWith('..') || path.isAbsolute(rel)) {
+        logger.warn({ containerPath, hostPath }, 'send-file: path escapes group folder, blocked');
+        return '';
+      }
+      try {
+        const buffer = fs.readFileSync(hostPath);
+        files.push({ name: path.basename(hostPath), buffer });
+        logger.info({ hostPath, size: buffer.length }, 'send-file: resolved attachment');
+      } catch (err) {
+        logger.warn({ hostPath, err }, 'send-file: could not read file');
+      }
+      return '';
+    })
+    .trim();
+
+  return { cleanText, files };
 }

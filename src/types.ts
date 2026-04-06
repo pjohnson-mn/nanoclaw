@@ -80,10 +80,17 @@ export interface TaskRunLog {
 
 // --- Channel abstraction ---
 
+/** A file to attach to an outbound message. Produced by resolveOutboundFiles(). */
+export interface OutboundFile {
+  name: string;
+  buffer: Buffer;
+}
+
 export interface Channel {
   name: string;
   connect(): Promise<void>;
-  sendMessage(jid: string, text: string): Promise<void>;
+  /** Send a message. `files` is optional; channels that don't support attachments ignore it. */
+  sendMessage(jid: string, text: string, files?: OutboundFile[]): Promise<void>;
   isConnected(): boolean;
   ownsJid(jid: string): boolean;
   disconnect(): Promise<void>;
