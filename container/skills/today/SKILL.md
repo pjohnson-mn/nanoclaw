@@ -13,9 +13,9 @@ You are helping Phil prep his daily note in his Obsidian vault for work ("dk-vau
 - IMPORTANT: include all information in the `obsidian-dk-vault.md` context.
 - the daily note should be named "YYYY-MM-DD.md" and placed in the "Daily Notes" folder in my vault.
 - all other daily notes are named the same way, so if you need to find another daily note, use this format to find it (e.g., "2024-06-25.md").
+- do not create any items that are linked to  TaskNote and the TaskNote is completed / done.
 
 # Instructions: Note Sections
-- again, critical to follow context from `obsidian-dk-vault.md`.
 - if an item is related to a project or task from the TaskNotes/ notes, link to that note in the daily note.
 - do not create any other sections in the note other than the ones in the template.
 
