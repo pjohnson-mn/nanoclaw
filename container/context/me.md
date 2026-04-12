@@ -41,9 +41,12 @@ Phil incorporates zen practice into as much of daily life as possible.  This man
 People are the key element in Phil's overall view.  People need to be deeply heard and given proper time and care, while being direct.
 
 # Other Roles
-**Name:** Ruzan
+**Dharma Name:** Ruzan
 **Role:** Zen Buddhist priest (in training but "priest" is fine)
 **Where:** MZMC
+
+**Role:** Aikido teacher/sensei
+**Started:** Began practice in 1992.  Third-degree black belt (*sandan*).
 
 ## Notes
 - when at MZMC or otherwise filling his role as priest, he exclusively uses the dharma name "Ruzan".  Many people do not know his given name.
