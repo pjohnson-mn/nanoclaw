@@ -1,6 +1,6 @@
 ---
-name: create-single-work-meeting
-description: use this skill to create a single-occurrence meeting in Phil's Work (Outlook) calendar.
+name: create-new-work-meeting-invite
+description: use this skill to create a new single-occurrence meeting in Phil's Work (Outlook) calendar and invite people.
 allowed-tools: Bash(*), phils-outlook
 ---
 
