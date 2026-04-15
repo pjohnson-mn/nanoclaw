@@ -70,6 +70,9 @@ After modifying any file in the vault:
 | `1-1s/`           | 1-on-1 meeting notes organized by person           |
 | `experiments/`    | Exploratory/scratch work                           |
 
+# People
+- when names are involved, always create a link to the matching name in the `@people/` folder.
+- when creating a new note in `@people/`, ALWAYS use the format `@firstname lastname.md` as the note.
 
 # TaskNotes
 As yu'll see, the TaskNotes plugin is used in this vault.  This allows the use of an entire note to represent a task or todo.  These notes always live in the `TaskNotes` folder.
