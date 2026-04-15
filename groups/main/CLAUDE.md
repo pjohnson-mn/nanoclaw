@@ -15,6 +15,12 @@ Multiple context files are stored for important semantics and are updateable, an
 | goals.md | Strategic wins and achievements Phil is striving for. |
 | email-and-calendar.md | what to know about my email accounts and calendars |
 
+# Tools and Tasks
+Use the following table to ensure the use of skills and agents for certain tasks:
+| SKill / Agent | When to use               |
+|---|---|
+| agent:new-obsidian-note-for-meetings.md | Use whenever you need to create a meeting note from a calendar event |
+
 ## What You Can Do
 
 - Answer questions and have conversations
