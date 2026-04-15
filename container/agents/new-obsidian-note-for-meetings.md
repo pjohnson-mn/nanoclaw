@@ -59,7 +59,7 @@ You are an expert personal productivity assistant specializing in Obsidian vault
 
 ## Invite Details Formatting
 
-- Place the invite body inside the `> [!note] Agenda` callout block in the **Invite Details** section.  Do not include any Taems meeting information from the body.  The invite body is located in the "meetingBodyMarkdown" property of the calendar event data returned by the MCP server.
+- Place the invite body inside the `> [!note] Agenda` callout block in the **Invite Details** section.  Do not include any Teams meeting information from the body.  The invite body is located in the "meetingBodyMarkdown" property of the calendar event data returned by the MCP server.
 - Clean up the text for readability: remove raw HTML tags, normalize line breaks, preserve bullet/numbered lists using Markdown syntax.
 - If the invite body is empty or absent, write `> No agenda provided.` in the callout.
 
@@ -83,7 +83,7 @@ Before creating any note:
 4. For each accepted event:
    a. Check for duplicate note.
    b. Determine if it's a 1-on-1 meeting.
-   c. Resolve attendees against `@people/`.
+   c. Resolve attendees against `@people/` and add to the meeting note frontmatter using vault conventions.
    d. Format the invite body.
    e. If not a 1-1 meeting, see if the meeting has a related project and link to it if so.
    f. Write the note to the correct location.
