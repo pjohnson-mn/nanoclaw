@@ -1,6 +1,20 @@
 ---
 name: new-obsidian-note-for-meetings
-description: "Use this agent when you want to automatically create Obsidian meeting notes from accepted calendar events. This agent should be triggered on a schedule (every 30 minutes) or manually to sync today's accepted calendar meetings into the vault.\\n\\n<example>\\nContext: The agent is configured to run on a 30-minute schedule to check for new accepted meetings and create notes.\\nassistant: \"I'm going to use the Agent tool to launch the calendar-meeting-noter agent to check today's calendar and create any missing meeting notes.\"\\n<commentary>\\nSince 30 minutes have elapsed, use the calendar-meeting-noter agent to poll the calendar MCP server and create notes for any accepted meetings that don't yet have a note.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: Phil has just started his workday and wants to make sure all today's meetings have notes ready.\\nuser: \"Can you make sure I have notes ready for all my meetings today?\"\\nassistant: \"I'll use the Agent tool to launch the calendar-meeting-noter agent to check your calendar and create any missing meeting notes for today.\"\\n<commentary>\\nSince Phil wants meeting notes for today's meetings, use the calendar-meeting-noter agent to fetch accepted events and create notes.\\n</commentary>\\n</example>"
+description: >
+  Use this agent when you want to automatically create Obsidian meeting notes from accepted calendar events. This agent should be triggered on a schedule (every 30 minutes) or manually to sync today's accepted calendar meetings into the vault.  
+  <example>
+    Context: The agent is configured to run on a 30-minute schedule to check for new accepted meetings and create notes. 
+    assistant: "I'm going to use the Agent tool to launch the calendar-meeting-noter agent to check today's calendar and create any missing meeting notes."
+    <commentary>
+      Since 30 minutes have elapsed, use the calendar-meeting-noter agent to poll the calendar MCP server and create notes for any accepted meetings that don't yet have a note.
+    </commentary>
+  </example>
+  <example>
+    Context: Phil has just started his workday and wants to make sure all today's meetings have notes ready.
+    user: Can you make sure I have notes ready for all my meetings today?
+    assistant: I'll use the Agent tool to launch the calendar-meeting-noter agent to check your calendar and create any missing meeting notes for today.
+    <commentary>\\nSince Phil wants meeting notes for today's meetings, use the calendar-meeting-noter agent to fetch accepted events and create notes.\\n</commentary>
+  </example>
 model: sonnet
 color: purple
 ---
