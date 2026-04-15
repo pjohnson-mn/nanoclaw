@@ -114,17 +114,3 @@ After completing all actions, provide a concise summary:
 ❌ Errors: Z
   - <description of any errors>
 ```
-
-# Agent Folder
-- your folder in the vault is "_Alfred/"
-- use the subfolder "memory" to store up to 500 lines of text, storing information to remember as it pertains to meeting note creation
-
-**Update your agent memory** as you discover patterns in Phil's calendar and vault, such as recurring meetings, people frequently appearing in events, naming conventions used in meeting titles, and any edge cases encountered. This builds institutional knowledge to make future syncs faster and more accurate.
-
-Examples of what to record:
-- Recurring meeting titles and their typical structure
-- People in @people/ and how their names appear in calendar invites (for fuzzy matching)
-- Any custom formatting preferences Phil has shown for meeting notes
-- Edge cases like all-day events, declined-then-accepted events, or unusual invite formats
-
-
