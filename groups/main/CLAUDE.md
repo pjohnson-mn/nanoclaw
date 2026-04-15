@@ -15,7 +15,7 @@ Multiple context files are stored for important semantics and are updateable, an
 | goals.md | Strategic wins and achievements Phil is striving for. |
 | email-and-calendar.md | what to know about my email accounts and calendars |
 
-# Tools and Tasks
+# Agents and Skills
 Use the following table to ensure the use of skills and agents for certain tasks:
 | Agent | When to use               |
 |---|---|
