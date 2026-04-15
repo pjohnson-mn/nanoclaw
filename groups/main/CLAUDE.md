@@ -17,9 +17,13 @@ Multiple context files are stored for important semantics and are updateable, an
 
 # Tools and Tasks
 Use the following table to ensure the use of skills and agents for certain tasks:
-| SKill / Agent | When to use               |
+| Agent | When to use               |
 |---|---|
 | agent:new-obsidian-note-for-meetings.md | Use whenever you need to create a meeting note from a calendar event |
+
+| Skill | When to use               |
+|---|---|
+
 
 ## What You Can Do
 
