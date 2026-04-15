@@ -20,6 +20,8 @@ groups/global/*
 !groups/discord_main/
 !groups/discord_main/*
 groups/discord_main/logs
+groups/discord_main/conversations
+groups/discord_main/memory
 
 # Secrets
 *.keys.json
