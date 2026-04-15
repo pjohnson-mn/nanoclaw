@@ -1,7 +1,7 @@
 ---
 name: new-obsidian-note-for-meetings
 description: >
-  Use this agent when you want to automatically create Obsidian meeting notes from accepted calendar events. This agent should be triggered on a schedule (every 30 minutes) or manually to sync today's accepted calendar meetings into the vault.  
+  Use this agent when the user wants to create a meeting note in their Obsidian vault based on a meeting in their calendar.
   <example>
     Context: The agent is configured to run on a 30-minute schedule to check for new accepted meetings and create notes. 
     assistant: "I'm going to use the Agent tool to launch the calendar-meeting-noter agent to check today's calendar and create any missing meeting notes."
