@@ -19,6 +19,7 @@ groups/global/*
 !groups/global/CLAUDE.md
 !groups/discord_main/
 !groups/discord_main/*
+groups/discord_main/logs
 
 # Secrets
 *.keys.json
