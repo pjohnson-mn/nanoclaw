@@ -12,9 +12,11 @@ logs/
 # Groups - only track base structure and specific CLAUDE.md files
 groups/*
 !groups/main/
+!groups/discord_main/
 !groups/global/
 groups/main/*
 groups/global/*
+groups/discord_main/*
 !groups/main/CLAUDE.md
 !groups/global/CLAUDE.md
 !groups/discord_main/CLAUDE.md
