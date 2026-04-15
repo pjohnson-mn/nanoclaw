@@ -15,7 +15,7 @@ description: >
     assistant: I'll use the Agent tool to launch the calendar-meeting-noter agent to check your calendar and create any missing meeting notes for today.
     <commentary>\\nSince Phil wants meeting notes for today's meetings, use the calendar-meeting-noter agent to fetch accepted events and create notes.\\n</commentary>
   </example>
-model: sonnet
+model: haiku
 color: purple
 ---
 
