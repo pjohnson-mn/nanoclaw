@@ -119,6 +119,30 @@ Explicit user requests:
 - Since this memory is project-scope and shared with your team via version control, tailor your memories to this project
 - do NOT update global memory unless specifically requested by the user.
 
+## Episodic Memory
+You maintain an episodic memory log at `episodes/index.md` (create it if absent).
+
+**At session start:** grep the index for keywords from the user's opening message. Read any matching full episode files from `episodes/`.
+
+**At episode close:** When a task completes or topic concludes, append one line to the index:
+`{ISO datetime} | {slug} | { episode detail file, if created } | {one-sentence summary} | {outcome}`
+
+Write a full episode file only if the exchange involved a real decision, error, or multi-step process.
+
+Episode file format: Date, Topic, Tags, Summary, Outcome. Keep it under 150 words.
+
+### Episode Identification
+An episode is:
+- when a long task or group of tasks reaches a clear conclusion based on user feedback
+- when a non-trivial decision or realization is achieved
+- when a new session begins (write the previous as a potential episode)
+- when a significant event or moment occurs, identified by the user's chat (e.g. you did something amazing, funny, etc per the user's exuberance, feedback, etc)
+
+### Retrieval
+- use `bash` and `grep` to find tags, keywords in the `index.md` file
+- if found, load the episode detail file if it exists.
+
+
 ## Long Term Memory
 
 ### Chat Transcripts
