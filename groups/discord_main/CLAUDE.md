@@ -19,13 +19,13 @@ Multiple context files are stored for important semantics and are updateable, an
 Use the following table to ensure the use of skills and agents for certain tasks:
 | Agent | When to use               |
 |---|---|
-| agent:new-obsidian-note-for-meetings.md | Use whenever you need to create a meeting note from a calendar event |
-| agent:embed-notes.md | Index/reindex vault notes into Qdrant (also runs nightly at 5 AM) |
-| agent:jot.md | Capture a quick thought to the Jots folder in Obsidian |
-| agent:get-plaud-recording.md | Sync Plaud AI recordings → Obsidian summaries |
-| agent:create-single-work-meeting.md | Create a single-occurrence meeting in Outlook calendar |
-| agent:check-work-availability.md | Check Outlook availability for up to 20 people |
-| agent:remarkable-expert.md | List, upload, or download files on reMarkable tablet |
+| new-obsidian-note-for-meetings.md | Use whenever you need to create a meeting note from a calendar event |
+| embed-notes.md | Index/reindex vault notes into Qdrant (also runs nightly at 5 AM) |
+| jot.md | Capture a quick thought to the Jots folder in Obsidian |
+| get-plaud-recording.md | Sync Plaud AI recordings → Obsidian summaries |
+| create-single-work-meeting.md | Create a single-occurrence meeting in Outlook calendar |
+| check-work-availability.md | Check Outlook availability for up to 20 people |
+| remarkable-expert.md | List, upload, or download files on reMarkable tablet |
 
 | Skill | When to use |
 |---|---|
