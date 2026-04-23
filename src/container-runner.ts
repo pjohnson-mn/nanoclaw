@@ -148,6 +148,12 @@ function buildVolumeMounts(
       const srcDir = path.join(skillsSrc, skillDir);
       if (!fs.statSync(srcDir).isDirectory()) continue;
       const dstDir = path.join(skillsDst, skillDir);
+      // Skip if both paths resolve to the same real location (e.g. symlinks to same target)
+      if (
+        fs.existsSync(dstDir) &&
+        fs.realpathSync(srcDir) === fs.realpathSync(dstDir)
+      )
+        continue;
       fs.cpSync(srcDir, dstDir, { recursive: true });
     }
   }

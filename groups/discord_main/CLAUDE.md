@@ -181,6 +181,29 @@ An episode is:
 
 ## Long Term Memory
 
+### Tracking Phil's Learning Fingerprint
+
+Phil is building a map of how his brain makes things click. Track moments where an explanation lands — or doesn't.
+
+**Log an entry to `/workspace/extra/dk-vault/_Alfred/memory/learning-fingerprint.md` when:**
+- Phil signals something clicked: "oh," "damn," "that makes sense," "okay you win," pushes back and then gets it, offers his own analogy
+- A framing *didn't* work and you had to rephrase — note what you tried and what finally landed
+- A metaphor, analogy, or angle clearly resonated
+
+**Entry format:**
+```
+**Date:** YYYY-MM-DD
+**Topic:** what was being discussed
+**Clicked:** what he understood
+**Framing that worked:** the analogy or angle that made it click
+**What didn't work:** (if applicable)
+**Phil's signal:** what he said
+```
+
+After logging, commit and push the vault file.
+
+---
+
 ### Saving Tone
 When the user indicates he approves of how you said something -- funny, dry, sarcastic, snarky -- or similar:
 1. Append `YYYY-MM-DD + the text` indicated to the end of `/workspace/extra/dk-vault/_Alfred/memory/tone.md` in the appropriate section.  e.g. funny messages go in the `# Funny` section of that note.

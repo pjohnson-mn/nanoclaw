@@ -502,6 +502,7 @@ async function runQuery(
         'mcp__phils-outlook__*',
         'mcp__mealie__*',
         'mcp__home-assistant__*',
+        'mcp__drawio__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -572,6 +573,10 @@ async function runQuery(
         'home-assistant': {
           type: 'http',
           url: 'http://192.168.50.41:9583/private_AS853lSJn7H0K4QS4EG6sQ',
+        },
+        drawio: {
+          command: 'npx',
+          args: ['-y', '@drawio/mcp'],
         },
       },
       hooks: {
