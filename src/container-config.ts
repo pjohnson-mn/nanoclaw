@@ -14,7 +14,7 @@ import path from 'path';
 
 import { GROUPS_DIR } from './config.js';
 
-export interface McpServerConfig {
+export interface McpStdioServerConfig {
   command: string;
   args?: string[];
   env?: Record<string, string>;
@@ -24,6 +24,15 @@ export interface McpServerConfig {
   instructions?: string;
 }
 
+export interface McpHttpServerConfig {
+  type: 'http';
+  url: string;
+  headers?: Record<string, string>;
+  instructions?: string;
+}
+
+export type McpServerConfig = McpStdioServerConfig | McpHttpServerConfig;
+
 export interface AdditionalMountConfig {
   hostPath: string;
   containerPath: string;
@@ -32,6 +41,7 @@ export interface AdditionalMountConfig {
 
 export interface ContainerConfig {
   mcpServers: Record<string, McpServerConfig>;
+  env: Record<string, string>;
   packages: { apt: string[]; npm: string[] };
   imageTag?: string;
   additionalMounts: AdditionalMountConfig[];
@@ -52,6 +62,7 @@ export interface ContainerConfig {
 function emptyConfig(): ContainerConfig {
   return {
     mcpServers: {},
+    env: {},
     packages: { apt: [], npm: [] },
     additionalMounts: [],
     skills: 'all',
@@ -75,6 +86,7 @@ export function readContainerConfig(folder: string): ContainerConfig {
     const raw = JSON.parse(fs.readFileSync(p, 'utf8')) as Partial<ContainerConfig>;
     return {
       mcpServers: raw.mcpServers ?? {},
+      env: raw.env ?? {},
       packages: {
         apt: raw.packages?.apt ?? [],
         npm: raw.packages?.npm ?? [],

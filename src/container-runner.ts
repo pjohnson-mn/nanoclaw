@@ -200,9 +200,10 @@ function buildMounts(
   // is a no-op for groups that have spawned before.
   initGroupFilesystem(agentGroup);
 
-  // Sync skill symlinks based on container.json selection before mounting.
+  // Sync skill and agent symlinks before mounting.
   const claudeDir = path.join(DATA_DIR, 'v2-sessions', agentGroup.id, '.claude-shared');
   syncSkillSymlinks(claudeDir, containerConfig);
+  syncAgentSymlinks(claudeDir);
 
   // Compose CLAUDE.md fresh every spawn from the shared base, enabled skill
   // fragments, and MCP server instructions. See `claude-md-compose.ts`.
@@ -266,6 +267,12 @@ function buildMounts(
   const skillsSrc = path.join(projectRoot, 'container', 'skills');
   if (fs.existsSync(skillsSrc)) {
     mounts.push({ hostPath: skillsSrc, containerPath: '/app/skills', readonly: true });
+  }
+
+  // Shared agents — read-only, symlinks in .claude-shared/agents/ point here.
+  const agentsSrc = path.join(projectRoot, 'container', 'agents');
+  if (fs.existsSync(agentsSrc)) {
+    mounts.push({ hostPath: agentsSrc, containerPath: '/app/agents', readonly: true });
   }
 
   // Additional mounts from container config
@@ -345,6 +352,53 @@ function syncSkillSymlinks(claudeDir: string, containerConfig: import('./contain
 }
 
 /**
+ * Sync agent symlinks in .claude-shared/agents/ to match container/agents/.
+ * Each symlink points to a container path (/app/agents/<name>.md) so it's
+ * dangling on the host but valid inside the container.
+ */
+function syncAgentSymlinks(claudeDir: string): void {
+  const agentsDir = path.join(claudeDir, 'agents');
+  if (!fs.existsSync(agentsDir)) {
+    fs.mkdirSync(agentsDir, { recursive: true });
+  }
+
+  const sharedAgentsDir = path.join(process.cwd(), 'container', 'agents');
+  const available = fs.existsSync(sharedAgentsDir)
+    ? fs.readdirSync(sharedAgentsDir).filter((f) => f.endsWith('.md'))
+    : [];
+  const availableSet = new Set(available);
+
+  // Remove symlinks no longer in container/agents/
+  for (const entry of fs.readdirSync(agentsDir)) {
+    const entryPath = path.join(agentsDir, entry);
+    let isSymlink = false;
+    try {
+      isSymlink = fs.lstatSync(entryPath).isSymbolicLink();
+    } catch {
+      continue;
+    }
+    if (isSymlink && !availableSet.has(entry)) {
+      fs.unlinkSync(entryPath);
+    }
+  }
+
+  // Create symlinks for each agent file
+  for (const file of available) {
+    const linkPath = path.join(agentsDir, file);
+    let exists = false;
+    try {
+      fs.lstatSync(linkPath);
+      exists = true;
+    } catch {
+      /* missing */
+    }
+    if (!exists) {
+      fs.symlinkSync(`/app/agents/${file}`, linkPath);
+    }
+  }
+}
+
+/**
  * Ensure container.json has the runtime identity fields the runner needs.
  * Written at spawn time so they're always current even if the DB values
  * change (e.g. group rename). Only writes if values differ to avoid
@@ -387,13 +441,6 @@ async function buildContainerArgs(
   // Everything NanoClaw-specific is in container.json (read by runner at startup).
   args.push('-e', `TZ=${TIMEZONE}`);
 
-  // Provider-contributed env vars (e.g. XDG_DATA_HOME, OPENCODE_*, NO_PROXY).
-  if (providerContribution.env) {
-    for (const [key, value] of Object.entries(providerContribution.env)) {
-      args.push('-e', `${key}=${value}`);
-    }
-  }
-
   // OneCLI gateway — injects HTTPS_PROXY + certs so container API calls
   // are routed through the agent vault for credential injection.
   try {
@@ -408,6 +455,19 @@ async function buildContainerArgs(
     }
   } catch (err) {
     log.warn('OneCLI gateway error — container will have no credentials', { containerName, err });
+  }
+
+  // Per-group env vars from container.json
+  for (const [key, value] of Object.entries(containerConfig.env ?? {})) {
+    args.push('-e', `${key}=${value}`);
+  }
+
+  // Provider-contributed env vars AFTER OneCLI so they can override defaults
+  // (e.g. ANTHROPIC_API_KEY=placeholder → real Foundry key).
+  if (providerContribution.env) {
+    for (const [key, value] of Object.entries(providerContribution.env)) {
+      args.push('-e', `${key}=${value}`);
+    }
   }
 
   // Host gateway

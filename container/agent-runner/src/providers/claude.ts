@@ -44,6 +44,7 @@ const TOOL_ALLOWLIST = [
   'Grep',
   'WebSearch',
   'WebFetch',
+  'Agent',
   'Task',
   'TaskOutput',
   'TaskStop',
