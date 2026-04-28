@@ -96,6 +96,7 @@ async function main(): Promise<void> {
 
   await runPollLoop({
     provider,
+    providerName,
     cwd: CWD,
     systemContext: { instructions },
   });
