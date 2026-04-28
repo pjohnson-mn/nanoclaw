@@ -31,7 +31,10 @@ function startFoundryProxy(targetBaseUrl: string): Promise<number> {
       req.on('data', (chunk: Buffer) => chunks.push(chunk));
       req.on('error', (err) => {
         log.error('[foundry-proxy] req error', { err: err.message });
-        if (!res.headersSent) { res.writeHead(400); res.end(); }
+        if (!res.headersSent) {
+          res.writeHead(400);
+          res.end();
+        }
       });
       req.on('end', () => {
         const body = Buffer.concat(chunks);
@@ -40,7 +43,10 @@ function startFoundryProxy(targetBaseUrl: string): Promise<number> {
         for (const [k, v] of Object.entries(req.headers)) {
           if (k === 'host') continue;
           if (k === 'anthropic-beta' && typeof v === 'string') {
-            const kept = v.split(',').map((b) => b.trim()).filter((b) => !STRIP_BETAS.has(b));
+            const kept = v
+              .split(',')
+              .map((b) => b.trim())
+              .filter((b) => !STRIP_BETAS.has(b));
             if (kept.length) outHeaders[k] = kept.join(', ');
             continue;
           }
@@ -63,7 +69,10 @@ function startFoundryProxy(targetBaseUrl: string): Promise<number> {
 
         proxyReq.on('error', (err) => {
           log.error('[foundry-proxy] upstream error', { err: err.message });
-          if (!res.headersSent) { res.writeHead(502); res.end(err.message); }
+          if (!res.headersSent) {
+            res.writeHead(502);
+            res.end(err.message);
+          }
         });
 
         if (body.length) proxyReq.write(body);
@@ -108,9 +117,12 @@ registerProviderContainerConfig('claude', () => {
   }
 
   // Model aliases always pass through regardless of proxy state.
-  if (foundryEnv.ANTHROPIC_DEFAULT_HAIKU_MODEL) env.ANTHROPIC_DEFAULT_HAIKU_MODEL = foundryEnv.ANTHROPIC_DEFAULT_HAIKU_MODEL;
-  if (foundryEnv.ANTHROPIC_DEFAULT_OPUS_MODEL) env.ANTHROPIC_DEFAULT_OPUS_MODEL = foundryEnv.ANTHROPIC_DEFAULT_OPUS_MODEL;
-  if (foundryEnv.ANTHROPIC_DEFAULT_SONNET_MODEL) env.ANTHROPIC_DEFAULT_SONNET_MODEL = foundryEnv.ANTHROPIC_DEFAULT_SONNET_MODEL;
+  if (foundryEnv.ANTHROPIC_DEFAULT_HAIKU_MODEL)
+    env.ANTHROPIC_DEFAULT_HAIKU_MODEL = foundryEnv.ANTHROPIC_DEFAULT_HAIKU_MODEL;
+  if (foundryEnv.ANTHROPIC_DEFAULT_OPUS_MODEL)
+    env.ANTHROPIC_DEFAULT_OPUS_MODEL = foundryEnv.ANTHROPIC_DEFAULT_OPUS_MODEL;
+  if (foundryEnv.ANTHROPIC_DEFAULT_SONNET_MODEL)
+    env.ANTHROPIC_DEFAULT_SONNET_MODEL = foundryEnv.ANTHROPIC_DEFAULT_SONNET_MODEL;
 
   return { env };
 });
